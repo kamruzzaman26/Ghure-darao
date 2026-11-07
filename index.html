@@ -443,12 +443,12 @@
               if(authMode==='register'){
                 const fullName=document.getElementById('authFullName').value.trim();
                 if(!fullName){setAuthMessage('আপনার নাম লিখুন।',true);return;}
-                const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{role:currentRole,full_name:fullName}}});
-                if(error)throw error;
                 const code=document.getElementById('inviteCode').value.trim();
-                if(currentRole==='client'&&data.session&&code){const joined=await supabaseClient.rpc('join_partner_by_code',{code});if(joined.error)throw joined.error;}
+                if(currentRole==='client'&&!code){setAuthMessage('Client Registration-এর জন্য Partner Invite Code আবশ্যক।',true);return;}
+                const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{role:currentRole,full_name:fullName,invite_code:currentRole==='client'?code:null}}});
+                if(error)throw error;
                 if(data.session){currentSession=data.session;await enterAuthenticatedApp();}
-                else setAuthMessage('রেজিস্ট্রেশন হয়েছে। ইমেইল যাচাই করে লগইন করুন।');
+                else setAuthMessage('রেজিস্ট্রেশন হয়েছে। ইমেইল যাচাই হলে আপনার Invite Code অনুযায়ী Partner-এর সঙ্গে যুক্ত হবে।');
               }else{
                 const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
                 if(error)throw error;currentSession=data.session;await enterAuthenticatedApp();
