@@ -286,6 +286,7 @@
                       <div class="bg-slate-800/80 rounded-xl p-4 border border-partner-700/40"><p class="text-xs text-slate-400 mb-1">আপনার Partner Invite Code</p><div class="flex items-center gap-2"><strong id="partnerInviteCode" class="text-xl tracking-widest text-white">লোড হচ্ছে…</strong><button onclick="copyPartnerCode()" class="px-3 py-2 rounded-lg bg-partner-700 text-white text-xs">কপি</button></div><p class="text-[11px] text-slate-500 mt-2">এই কোডটি ক্লায়েন্টকে দিন।</p></div>
                       <div class="bg-slate-800/80 rounded-xl p-4 border border-slate-700"><p class="text-xs text-slate-400 mb-2">আপনার যুক্ত ক্লায়েন্ট</p><div id="partnerClientList" class="text-sm text-slate-200">লোড হচ্ছে…</div></div>
                     </div>
+                    <div class="mb-3"><label class="block text-xs font-bold text-slate-300 mb-2">ক্লায়েন্ট নির্বাচন করুন</label><select id="partnerClientSelect" onchange="filterPartnerClient(this.value)" class="w-full md:w-1/2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm"><option value="">ক্লায়েন্ট নির্বাচন করুন</option></select></div>
                     <!-- Date Selection for Evaluation -->
                     <div class="space-y-4">
                         <div>
@@ -628,7 +629,7 @@
             window.cloudReportRows.forEach(r=>{logs[r.report_date]={date:r.report_date,status:r.status,block1:r.block1,block2:r.block2,block3:r.block3,block4:r.block4,block5:r.block5,triggerPoint:r.trigger_point,habitSun:r.habit_sun,habitExer:r.habit_exercise,habitDiet:r.habit_diet,sisterEval:r.report_reviews?.length?{notes:r.report_reviews[r.report_reviews.length-1].comment}:null};});
             localStorage.setItem(STORAGE_JOURNAL,JSON.stringify(logs));
             updateGlobalStats();
-            if(currentRole==='partner')populateSisterDateSelect();
+            if(currentRole==='partner'&&!document.getElementById('partnerClientSelect'))populateSisterDateSelect();
             if(currentRole==='client')renderAnalytics();
         }
 
@@ -840,9 +841,19 @@
           document.getElementById('partnerInviteCode').textContent=error?'কোড লোড হয়নি':(invite?.invite_code||'কোড নেই');
           const {data:links}=await supabaseClient.from('partner_clients').select('client_id').eq('partner_id',currentSession.user.id);
           const ids=(links||[]).map(x=>x.client_id);
+          const select=document.getElementById('partnerClientSelect');select.innerHTML='<option value="">ক্লায়েন্ট নির্বাচন করুন</option>';
           if(!ids.length){document.getElementById('partnerClientList').textContent='এখনো কোনো ক্লায়েন্ট যুক্ত হয়নি।';return;}
           const {data:profiles}=await supabaseClient.from('profiles').select('id,full_name').in('id',ids);
+          (profiles||[]).forEach(p=>{const op=document.createElement('option');op.value=p.id;op.textContent=p.full_name||'নাম দেওয়া হয়নি';select.appendChild(op);});
           document.getElementById('partnerClientList').innerHTML=(profiles||[]).map(p=>'<div class="py-1 border-b border-slate-700">'+escapeHtml(p.full_name||'নাম দেওয়া হয়নি')+'</div>').join('');
+          if(profiles?.length){select.value=profiles[0].id;filterPartnerClient(select.value);}
+        }
+        function filterPartnerClient(clientId){
+          const filtered=(window.cloudReportRows||[]).filter(r=>r.client_id===clientId);
+          window.partnerFilteredRows=filtered;
+          const logs={};
+          filtered.forEach(r=>{logs[r.report_date]={date:r.report_date,status:r.status,block1:r.block1,block2:r.block2,block3:r.block3,block4:r.block4,block5:r.block5,triggerPoint:r.trigger_point,habitSun:r.habit_sun,habitExer:r.habit_exercise,habitDiet:r.habit_diet,sisterEval:r.report_reviews?.length?{notes:r.report_reviews[r.report_reviews.length-1].comment}:null};});
+          localStorage.setItem(STORAGE_JOURNAL,JSON.stringify(logs));populateSisterDateSelect();
         }
         function copyPartnerCode(){const code=document.getElementById('partnerInviteCode').textContent;if(code&&code!=='কোড নেই'&&code!=='লোড হচ্ছে…')navigator.clipboard?.writeText(code).then(()=>showToast('Invite Code কপি হয়েছে।'));}
         function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
