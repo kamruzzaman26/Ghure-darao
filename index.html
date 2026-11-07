@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="bn" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ঘুরে দাঁড়াও - প্রফেশনাল রিকভারি ও রুটিন ড্যাশবোর্ড</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Bengali Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        partner: {
+                            50: '#fdf4ff',
+                            100: '#fae8ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7e22ce',
+                            900: '#581c87',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Hind Siliguri', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="h-full text-slate-100 antialiased flex flex-col bg-slate-950">
+
+    <!-- Toast Notification -->
+    <div id="toastMessage" class="hidden fixed bottom-6 right-6 z-50 bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastText" class="text-sm font-medium">তথ্য সেভ হয়েছে!</span>
+    </div>
+
+    <!-- 1. LOGIN SCREEN CONTAINER -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div class="max-w-md w-full bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-500 border border-brand-500/20 mb-2">
+                    <i class="fa-solid fa-compass text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-wide text-white">ঘুরে দাঁড়াও পোর্টাল</h1>
+                <p class="text-xs text-slate-400">একাকীত্বের অন্ধকার থেকে আলোর পথে যাত্রার ব্লুপ্রিন্ট</p>
+            </div>
+
+            <div class="space-y-4">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">লগইন টাইপ নির্বাচন করুন:</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" id="roleBtnClient" onclick="selectRole('client')" class="py-3 px-4 rounded-xl border border-brand-500 bg-brand-500/10 text-brand-400 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user"></i> ক্লাইন্ট (ভাই)
+                    </button>
+                    <button type="button" id="roleBtnPartner" onclick="selectRole('partner')" class="py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-shield"></i> পার্টনার (বোন)
+                    </button>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">ইউজারনেম (Username):</label>
+                        <input type="text" id="loginUsername" placeholder="brother অথবা sister" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">পাসওয়ার্ড (Password):</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                    </div>
+                </div>
+
+                <button type="button" onclick="handleLogin()" class="w-full py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm mt-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> ড্যাশবোর্ডে প্রবেশ করুন
+                </button>
+                <p class="text-center text-xs text-slate-500 pt-2">ডেমো অ্যাকাউন্ট: <b>brother</b> (ভাই) / <b>sister</b> (বোন) [পাসওয়ার্ড: 123456]</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APP DASHBOARD -->
+    <div id="mainDashboard" class="hidden flex-grow flex flex-col">
+        
+        <!-- Header Navbar -->
+        <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-compass text-brand-500"></i>
+                        <span class="hidden sm:inline">ঘুরে দাঁড়াও</span>
+                    </span>
+                    <span id="userRoleBadge" class="px-3 py-1 rounded-full text-xs font-bold border">
+                        <!-- Role Badge -->
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="hidden md:flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+                        <span class="text-slate-400">ক্লিন ডে: <b id="headClean" class="text-emerald-400">0</b></span>
+                        <span class="text-slate-600">|</span>
+                        <span class="text-slate-400">স্ট্রিক: <b id="headStreak" class="text-amber-400">0 দিন</b></span>
+                    </div>
+
+                    <button onclick="handleLogout()" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-lg border border-rose-500/30 font-semibold transition-all flex items-center gap-1">
+                        <i class="fa-solid fa-power-off"></i> লগআউট
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Navigation Tabs based on Role -->
+        <div class="bg-slate-900/60 border-b border-slate-800 backdrop-blur-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-2 sm:gap-4 overflow-x-auto py-2.5 text-xs sm:text-sm" id="navTabsContainer">
+                <!-- Dynamically generated for Brother or Sister -->
+            </div>
+        </div>
+
+        <!-- Dashboard Body Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
+            
+            <!-- CLIENT VIEW 1: DAILY TRACKER & 5-BLOCK JOURNAL (ONLY FOR BROTHER) -->
+            <section id="secBrotherJournal" class="space-y-6 hidden">
+                <form id="journalForm" onsubmit="saveJournalEntry(event)" class="space-y-6">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">তারিখ নির্বাচন করুন:</label>
+                            <input type="date" id="journalDate" required onchange="loadJournalDataForDate(this.value)" class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">আজকের আসক্তি ট্র্যাকার স্টেটাস:</label>
+                            <select id="journalStatus" required class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none text-sm font-bold">
+                                <option value="clean" class="text-emerald-400">🟢 সম্পূর্ণ ক্লিন দিন (Clean Day)</option>
+                                <option value="relapsed" class="text-rose-400">🔴 হোঁচট / রিল্যাপস দিন (Relapsed Day)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 5-Block Framework -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-lg">
+                        <div class="bg-slate-800/80 px-6 py-3.5 border-b border-slate-700 flex items-center justify-between">
+                            <h2 class="font-bold text-sm text-brand-300 flex items-center gap-2">
+                                <i class="fa-solid fa-book-open"></i> ধীরে আগানো: ৫-ধাপের ডায়েরি মডেল
+                            </h2>
+                            <span class="text-xs bg-brand-500/10 text-brand-400 px-2.5 py-1 rounded-full border border-brand-500/20">বইয়ের অধ্যায় ৬</span>
+                        </div>
+                        <div class="p-6 space-y-5">
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-400 mb-1.5">১. ৩টি ভালো কাজ (Morning/Day):</label>
+                                <textarea id="block1" rows="2" placeholder="আজকের ৩টি ভালো কাজ লিখুন..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-emerald-500 outline-none text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-rose-400 mb-1.5">২. কম ভালো অংশ ও ভুল (Unfiltered Truth):</label>
+                                <textarea id="block2" rows="2" placeholder="আজকে কোথায় ভুল বা আলসেমি হয়েছে (কোনো অপরাধবোধ ছাড়াই লিখুন)..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-rose-500 outline-none text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-sky-400 mb-1.5">৩. সিদ্ধান্ত ও প্রতিশ্রুতি (ভবিষ্যতের নোঙর):</label>
+                                <textarea id="block3" rows="2" placeholder="ভবিষ্যতে এমন ভুল না করার দৃঢ় সিদ্ধান্ত..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-sky-500 outline-none text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-amber-400 mb-1.5">৪. ভালো অংশ ও সাফল্য (অর্জন ও আনন্দ):</label>
+                                <textarea id="block4" rows="2" placeholder="আজকের সারাদিনের সেরা অর্জনসমূহ..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-amber-500 outline-none text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-indigo-400 mb-1.5">৫. শিক্ষা, পরিকল্পনা ও প্রায়শ্চিত্ত:</label>
+                                <textarea id="block5" rows="2" placeholder="ভুল থেকে পাওয়া শিক্ষা ও আত্মোন্নতির পরিকল্পনা..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Neuro-Balance & Trigger Section -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
+                        <h3 class="font-bold text-sm text-purple-400 flex items-center gap-2 border-b border-slate-800 pb-3">
+                            <i class="fa-solid fa-brain"></i> নিউরো-ব্যালেন্স ও ট্রিগার পয়েন্ট ট্র্যাকার
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">আজকের ট্রিগার পয়েন্ট (যদি থাকে):</label>
+                                <input type="text" id="triggerPoint" placeholder="যেমন: সোশ্যাল মিডিয়া, রাত জাগা, একাকীত্ব..." class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-purple-500 outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-2">আজকের হরমোন কেয়ার অভ্যাসসমূহ:</label>
+                                <div class="space-y-2 text-xs">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" id="habitSun" class="rounded bg-slate-800 border-slate-700 text-brand-500">
+                                        <span>☀️ সূর্যের আলো ও ১০ মি. হাঁটা (সেরোটোনিন বৃদ্ধি)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" id="habitExer" class="rounded bg-slate-800 border-slate-700 text-brand-500">
+                                        <span>🏃‍♂️ শারীরিক ব্যায়াম/খেলাধুলা (এন্ডরফিন্স বৃদ্ধি)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" id="habitDiet" class="rounded bg-slate-800 border-slate-700 text-brand-500">
+                                        <span>🍌 টাইরোসিন খাবার (ডোপামিন রিসেট)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>আজকের সারাদিনের রিপোর্ট বোনের কাছে জমা দিন</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- CLIENT VIEW 2: ROUTINE PLANNER (EDITABLE BY BROTHER) -->
+            <section id="secBrotherRoutine" class="space-y-6 hidden">
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                        <div>
+                            <h2 class="font-bold text-lg text-white flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-check text-brand-400"></i>
+                                <span>আমার দৈনিক ও মাদ্রাসার ক্লাস রুটিন এডিটর</span>
+                            </h2>
+                            <p class="text-xs text-slate-400">আপনার নিজস্ব রুটিন প্রয়োজন অনুযায়ী সাজিয়ে নিন</p>
+                        </div>
+                        <button onclick="openAddRoutineModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> নতুন আইটেম যুক্ত করুন
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-800/80 text-xs text-slate-400 uppercase tracking-wider">
+                                <tr>
+                                    <th class="p-3">সময়</th>
+                                    <th class="p-3">কার্যক্রম / বিষয়</th>
+                                    <th class="p-3">ধরণ</th>
+                                    <th class="p-3 text-right">অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="routineTableBody" class="divide-y divide-slate-800">
+                                <!-- Rendered JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COMMON ANALYTICS VIEW (LUSTMANAGER STYLE) -->
+            <section id="secAnalytics" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
+                        <span class="text-xs text-slate-400 font-semibold uppercase">বর্তমান স্ট্রিক (Streak)</span>
+                        <div class="text-3xl font-extrabold text-amber-400 mt-2" id="anaStreak">0 দিন</div>
+                        <span class="text-xs text-emerald-400 mt-1 inline-block">🔥 ধারাবাহিকতা অব্যাহত রয়েছে</span>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
+                        <span class="text-xs text-slate-400 font-semibold uppercase">মোট ক্লিন ডে (Total Clean)</span>
+                        <div class="text-3xl font-extrabold text-emerald-400 mt-2" id="anaClean">0 দিন</div>
+                        <span class="text-xs text-slate-500 mt-1 inline-block">রেকর্ড অনুসারে</span>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
+                        <span class="text-xs text-slate-400 font-semibold uppercase">সাপ্তাহিক সাফল্য (Weekly)</span>
+                        <div class="text-3xl font-extrabold text-brand-400 mt-2" id="anaWeekly">0%</div>
+                        <span class="text-xs text-slate-500 mt-1 inline-block">গত ৭ দিনের হার</span>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
+                        <span class="text-xs text-slate-400 font-semibold uppercase">মাসিক সাফল্য (Monthly)</span>
+                        <div class="text-3xl font-extrabold text-purple-400 mt-2" id="anaMonthly">0%</div>
+                        <span class="text-xs text-slate-500 mt-1 inline-block">গত ৩০ দিনের হার</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
+                    <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-brand-400"></i> বিগত ২৮ দিনের ট্র্যাকিং ক্যালেন্ডার (LustManager Style)
+                    </h3>
+                    <div id="analyticsCalendarGrid" class="grid grid-cols-7 gap-2 text-center text-xs">
+                        <!-- Populated JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- PARTNER VIEW: SISTER'S FULL BROTHER MONITORING & EVALUATION DASHBOARD -->
+            <section id="secSisterDashboard" class="space-y-6 hidden">
+                <div class="bg-gradient-to-br from-slate-900 via-partner-950/30 to-slate-900 p-6 rounded-2xl border border-partner-700/40 shadow-xl space-y-6">
+                    <div class="flex items-center gap-3 border-b border-partner-800/60 pb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-partner-500/20 text-partner-400 border border-partner-500/30 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-white">বোনের অ্যাকাউন্টবিলিটি ও মূল্যায়ন প্যানেল</h2>
+                            <p class="text-xs text-partner-300">ভাইয়ের দৈনিক রিপোর্ট, ৫-ব্লকের ডায়েরি ও রুটিন দেখার বিশেষ ড্যাশবোর্ড</p>
+                        </div>
+                    </div>
+
+                    <!-- Date Selection for Evaluation -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-2">পর্যালোচনা করার জন্য ভাইয়ের রিপোর্ট বেছে নিন:</label>
+                            <select id="sisterDateSelect" onchange="loadBrotherEntryForSister(this.value)" class="w-full md:w-1/2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-semibold text-sm outline-none">
+                                <!-- Options -->
+                            </select>
+                        </div>
+
+                        <!-- Brother Full Live Report View (Read Only) -->
+                        <div id="brotherReportCard" class="bg-slate-800/90 p-5 rounded-2xl border border-slate-700 space-y-4 text-xs text-slate-300 shadow-inner">
+                            <p class="italic text-slate-500">উপরে তারিখ বেছে নিলে ভাইয়ের সম্পূর্ণ রিপোর্ট এখানে দেখা যাবে...</p>
+                        </div>
+
+                        <!-- Brother's Routine Inspection Box (Read Only for Sister) -->
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                            <h3 class="font-bold text-sm text-brand-300 flex items-center gap-2">
+                                <i class="fa-solid fa-clock"></i> ভাইয়ের বর্তমান দৈনিক রুটিন (ভিউ মোড)
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-slate-300">
+                                    <thead class="bg-slate-800 text-slate-400 uppercase">
+                                        <tr>
+                                            <th class="p-2">সময়</th>
+                                            <th class="p-2">কার্যক্রম</th>
+                                            <th class="p-2">ধরণ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sisterRoutineInspectionBody" class="divide-y divide-slate-800">
+                                        <!-- Rendered JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Sister Feedback Form -->
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-partner-800/50 space-y-4">
+                            <h3 class="font-bold text-sm text-partner-300 flex items-center gap-2">
+                                <i class="fa-solid fa-heart"></i> বোনের অনুভূতি, মূল্যায়ন ও কমেন্ট সেভ করুন:
+                            </h3>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">সততা ও মেজাজ রেটিং (১-৫ স্টার):</label>
+                                <select id="sisterRating" class="w-full md:w-1/2 px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs outline-none">
+                                    <option value="5">⭐⭐⭐⭐⭐ অসাধারণ ও শতভাগ সৎ</option>
+                                    <option value="4">⭐⭐⭐⭐ খুব ভালো প্রচেষ্টা</option>
+                                    <option value="3">⭐⭐⭐ সন্তোষজনক (আরেকটু নজর দিন)</option>
+                                    <option value="2">⭐⭐ অলসতা দেখা গেছে</option>
+                                    <option value="1">⭐ মনোযোগ প্রয়োজন (সতর্কবার্তা!)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">ভাইয়ের জন্য আপনার বার্তা ও উপদেশ:</label>
+                                <textarea id="sisterNotes" rows="3" placeholder="যেমন: তোমার সিদ্ধান্তটি খুব সুন্দর লেগেছে। কাল সময়মতো ঘুমাবে..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs outline-none"></textarea>
+                            </div>
+
+                            <button onclick="saveSisterFeedback()" class="w-full py-3.5 bg-partner-700 hover:bg-partner-600 text-white font-bold rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check-circle"></i> বোনের মূল্যায়ন সেভ করুন
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ROUTINE ADD MODAL -->
+    <div id="routineModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full space-y-4">
+            <h3 class="font-bold text-white text-base">রুটিনে নতুন কার্যক্রম যোগ করুন</h3>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">সময় (শুরু - শেষ):</label>
+                    <input type="text" id="rtTime" placeholder="যেমন: ০৭:৩০ - ০৮:১৫" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">কার্যক্রম / বিষয়:</label>
+                    <input type="text" id="rtTitle" placeholder="যেমন: সহীহু মুসলিম (শাইখ তানজিল)" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">ধরণ:</label>
+                    <select id="rtType" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+                        <option value="সালাত">সালাত / দোয়া</option>
+                        <option value="পড়াশোনা">পড়াশোনা / ক্লাস</option>
+                        <option value="দায়িত্ব">দায়িত্ব / কাজ</option>
+                        <option value="খাওয়া">খাওয়া / বিশ্রাম</option>
+                        <option value="ঘুম">ঘুম</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeAddRoutineModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-lg">বাতিল</button>
+                <button onclick="saveRoutineItem()" class="px-4 py-2 bg-brand-600 text-white text-xs font-bold rounded-lg">সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Engine -->
+    <script>
+        const STORAGE_JOURNAL = 'gd_journal_logs_v3';
+        const STORAGE_ROUTINE = 'gd_routine_plan_v3';
+        const STORAGE_USER = 'gd_current_user_v3';
+
+        let currentRole = 'client';
+
+        const defaultRoutine = [
+            { time: "০৪:০০ - ০৫:৩০", title: "ঘুম ও ফজর সালাত (দোয়া সহ)", type: "সালাত" },
+            { time: "০৫:৩০ - ০৭:৩০", title: "ঘুম ও মাদ্রাসার ক্লাসের প্রস্তুতি", type: "পড়াশোনা" },
+            { time: "০৭:৩০ - ১০:১৫", title: "মাদ্রাসার ক্লাস (১ম অংশ)", type: "পড়াশোনা" },
+            { time: "১০:১৫ - ১০:৩৫", title: "টিফিন টাইম", type: "খাওয়া" },
+            { time: "১০:৩৫ - ১২:৩৫", title: "মাদ্রাসার ক্লাস (২য় অংশ / আজমানে প্রোগ্রাম)", type: "দায়িত্ব" },
+            { time: "১২:৩৫ - ০১:০৫", title: "যোহরের সালাত", type: "সালাত" },
+            { time: "০১:১৫ - ০৩:৪০", title: "গোসল, খাওয়া ও বিশ্রাম", type: "খাওয়া" },
+            { time: "০৩:৪০ - ০৫:২০", title: "আছরের সালাত ও পড়া (আপুর সাথে শেয়ার)", type: "সালাত" },
+            { time: "০৬:৩০ - ০৭:৩০", title: "মাগরিবের সালাত ও দোয়া", type: "সালাত" },
+            { time: "০৭:৩০ - ০৯:৩০", title: "কোচিং, ডিনার ও এশার সালাত", type: "পড়াশোনা" },
+            { time: "০৯:৩০ - ১১:০০", title: "ব্যক্তিগত পড়াশোনা", type: "পড়াশোনা" },
+            { time: "১১:০০ - ১২:০০", title: "রিপোর্ট জমা ও ঘুমের প্রস্তুতি", type: "দায়িত্ব" },
+            { time: "১২:০০ - ০৪:০০", title: "রাতের ঘুম", type: "ঘুম" }
+        ];
+
+        window.onload = function() {
+            initRoutine();
+            const user = localStorage.getItem(STORAGE_USER);
+            if (user) {
+                currentRole = user;
+                showDashboard();
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('journalDate').value = today;
+            loadJournalDataForDate(today);
+        };
+
+        function selectRole(role) {
+            currentRole = role;
+            const btnC = document.getElementById('roleBtnClient');
+            const btnP = document.getElementById('roleBtnPartner');
+            if (role === 'client') {
+                btnC.className = "py-3 px-4 rounded-xl border border-brand-500 bg-brand-500/10 text-brand-400 font-bold text-sm flex items-center justify-center gap-2";
+                btnP.className = "py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-sm flex items-center justify-center gap-2";
+            } else {
+                btnP.className = "py-3 px-4 rounded-xl border border-partner-500 bg-partner-500/10 text-partner-400 font-bold text-sm flex items-center justify-center gap-2";
+                btnC.className = "py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-sm flex items-center justify-center gap-2";
+            }
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value.trim();
+
+            if (!u || !p) {
+                alert('অনুগ্রহ করে ইউজারনেম ও পাসওয়ার্ড লিখুন');
+                return;
+            }
+
+            localStorage.setItem(STORAGE_USER, currentRole);
+            showDashboard();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem(STORAGE_USER);
+            document.getElementById('mainDashboard').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+
+            const badge = document.getElementById('userRoleBadge');
+            const nav = document.getElementById('navTabsContainer');
+            nav.innerHTML = '';
+
+            if (currentRole === 'client') {
+                // BROTHER ROLE
+                badge.textContent = 'ক্লাইন্ট পোর্টাল (ভাই)';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30';
+                
+                nav.innerHTML = `
+                    <button id="tabBtnJournal" onclick="switchTab('journal')" class="px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-brand-600 text-white">
+                        <i class="fa-solid fa-pen-to-square"></i> আজকের ডায়েরি ও ট্র্যাকার
+                    </button>
+                    <button id="tabBtnRoutine" onclick="switchTab('routine')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-calendar-days"></i> দৈনিক রুটিন এডিটর
+                    </button>
+                    <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i> সাপ্তাহিক ও মাসিক অ্যানালিটিক্স
+                    </button>
+                `;
+                switchTab('journal');
+
+            } else {
+                // SISTER ROLE
+                badge.textContent = 'পার্টনার ড্যাশবোর্ড (বোন)';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-partner-500/20 text-partner-300 border border-partner-500/30';
+                
+                nav.innerHTML = `
+                    <button id="tabBtnSister" onclick="switchTab('sister')" class="px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-partner-600 text-white">
+                        <i class="fa-solid fa-user-shield"></i> ভাইয়ের রিপোর্ট ও মূল্যায়ন
+                    </button>
+                    <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i> ভাইয়ের অগ্রগতি ও অ্যানালিটিক্স
+                    </button>
+                `;
+                switchTab('sister');
+            }
+
+            updateGlobalStats();
+        }
+
+        function switchTab(tab) {
+            const secs = ['secBrotherJournal', 'secBrotherRoutine', 'secAnalytics', 'secSisterDashboard'];
+            secs.forEach(s => document.getElementById(s).classList.add('hidden'));
+
+            if (tab === 'journal') {
+                document.getElementById('secBrotherJournal').classList.remove('hidden');
+            } else if (tab === 'routine') {
+                document.getElementById('secBrotherRoutine').classList.remove('hidden');
+                renderRoutineTable();
+            } else if (tab === 'analytics') {
+                document.getElementById('secAnalytics').classList.remove('hidden');
+                renderAnalytics();
+            } else if (tab === 'sister') {
+                document.getElementById('secSisterDashboard').classList.remove('hidden');
+                populateSisterDateSelect();
+                renderSisterRoutineInspection();
+            }
+        }
+
+        // JOURNAL LOGIC
+        function getJournalLogs() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_JOURNAL)) || {}; }
+            catch (e) { return {}; }
+        }
+
+        function saveJournalEntry(e) {
+            e.preventDefault();
+            const date = document.getElementById('journalDate').value;
+            if (!date) return;
+
+            const logs = getJournalLogs();
+            const existingSister = logs[date] ? logs[date].sisterEval : null;
+
+            logs[date] = {
+                date: date,
+                status: document.getElementById('journalStatus').value,
+                block1: document.getElementById('block1').value,
+                block2: document.getElementById('block2').value,
+                block3: document.getElementById('block3').value,
+                block4: document.getElementById('block4').value,
+                block5: document.getElementById('block5').value,
+                triggerPoint: document.getElementById('triggerPoint').value,
+                habitSun: document.getElementById('habitSun').checked,
+                habitExer: document.getElementById('habitExer').checked,
+                habitDiet: document.getElementById('habitDiet').checked,
+                sisterEval: existingSister
+            };
+
+            localStorage.setItem(STORAGE_JOURNAL, JSON.stringify(logs));
+            showToast('আজকের রিপোর্ট সেভ হয়েছে ও বোনে কাছে পৌঁছেছে!');
+            updateGlobalStats();
+        }
+
+        function loadJournalDataForDate(date) {
+            const logs = getJournalLogs();
+            const d = logs[date];
+            if (d) {
+                document.getElementById('journalStatus').value = d.status || 'clean';
+                document.getElementById('block1').value = d.block1 || '';
+                document.getElementById('block2').value = d.block2 || '';
+                document.getElementById('block3').value = d.block3 || '';
+                document.getElementById('block4').value = d.block4 || '';
+                document.getElementById('block5').value = d.block5 || '';
+                document.getElementById('triggerPoint').value = d.triggerPoint || '';
+                document.getElementById('habitSun').checked = !!d.habitSun;
+                document.getElementById('habitExer').checked = !!d.habitExer;
+                document.getElementById('habitDiet').checked = !!d.habitDiet;
+            } else {
+                document.getElementById('journalStatus').value = 'clean';
+                document.getElementById('block1').value = '';
+                document.getElementById('block2').value = '';
+                document.getElementById('block3').value = '';
+                document.getElementById('block4').value = '';
+                document.getElementById('block5').value = '';
+                document.getElementById('triggerPoint').value = '';
+                document.getElementById('habitSun').checked = false;
+                document.getElementById('habitExer').checked = false;
+                document.getElementById('habitDiet').checked = false;
+            }
+        }
+
+        // SISTER DASHBOARD LOGIC
+        function populateSisterDateSelect() {
+            const logs = getJournalLogs();
+            const sel = document.getElementById('sisterDateSelect');
+            sel.innerHTML = '';
+            const sorted = Object.keys(logs).sort().reverse();
+
+            if (sorted.length === 0) {
+                sel.innerHTML = '<option value="">ভাইয়ের কোনো এন্ট্রি জমা হয়নি</option>';
+                loadBrotherEntryForSister('');
+                return;
+            }
+
+            sorted.forEach(d => {
+                const item = logs[d];
+                const hasEval = item.sisterEval && item.sisterEval.notes;
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = `${d} - ${item.status === 'clean' ? '🟢 ক্লিন ডে' : '🔴 রিল্যাপস ডে'} ${hasEval ? ' (মূল্যায়িত ✓)' : ' (অপেক্ষমাণ ⏳)'}`;
+                sel.appendChild(opt);
+            });
+
+            if (sorted.length > 0) loadBrotherEntryForSister(sorted[0]);
+        }
+
+        function loadBrotherEntryForSister(date) {
+            const card = document.getElementById('brotherReportCard');
+            if (!date) {
+                card.innerHTML = '<p class="italic text-slate-500">কোনো ডাটা নেই।</p>';
+                return;
+            }
+
+            const logs = getJournalLogs();
+            const item = logs[date];
+            if (!item) return;
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                    <span class="font-bold text-white text-xs">রিপোর্ট তারিখ: ${item.date}</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${item.status === 'clean' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                        ${item.status === 'clean' ? '🟢 Clean Day' : '🔴 Relapsed Day'}
+                    </span>
+                </div>
+                <div class="space-y-2 leading-relaxed">
+                    <p><b class="text-emerald-400">১. ৩টি ভালো কাজ:</b> ${item.block1 || '-'}</p>
+                    <p><b class="text-rose-400">২. কম ভালো অংশ (সততা):</b> ${item.block2 || '-'}</p>
+                    <p><b class="text-sky-400">৩. সিদ্ধান্ত:</b> ${item.block3 || '-'}</p>
+                    <p><b class="text-amber-400">৪. অর্জন/সাফল্য:</b> ${item.block4 || '-'}</p>
+                    <p><b class="text-indigo-400">৫. শিক্ষা ও প্রায়শ্চিত্ত:</b> ${item.block5 || '-'}</p>
+                    <p class="text-purple-300"><b>⚠️ চিহ্নিত ট্রিগার:</b> ${item.triggerPoint || 'নেই'}</p>
+                    <div class="pt-2 flex gap-4 text-[11px] text-slate-400">
+                        <span>☀️ রোদ/হাঁটা: <b>${item.habitSun ? 'হ্যাঁ' : 'না'}</b></span>
+                        <span>🏃‍♂️ ব্যায়াম: <b>${item.habitExer ? 'হ্যাঁ' : 'না'}</b></span>
+                        <span>🍌 ডায়েট: <b>${item.habitDiet ? 'হ্যাঁ' : 'না'}</b></span>
+                    </div>
+                </div>
+            `;
+
+            if (item.sisterEval) {
+                document.getElementById('sisterRating').value = item.sisterEval.rating || '5';
+                document.getElementById('sisterNotes').value = item.sisterEval.notes || '';
+            } else {
+                document.getElementById('sisterRating').value = '5';
+                document.getElementById('sisterNotes').value = '';
+            }
+        }
+
+        function saveSisterFeedback() {
+            const date = document.getElementById('sisterDateSelect').value;
+            if (!date) return;
+
+            const logs = getJournalLogs();
+            if (!logs[date]) return;
+
+            logs[date].sisterEval = {
+                rating: document.getElementById('sisterRating').value,
+                notes: document.getElementById('sisterNotes').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            localStorage.setItem(STORAGE_JOURNAL, JSON.stringify(logs));
+            showToast('বোনের মূল্যায়ন সফলভাবে সংরক্ষিত হয়েছে!');
+            populateSisterDateSelect();
+        }
+
+        function renderSisterRoutineInspection() {
+            const list = getRoutine();
+            const body = document.getElementById('sisterRoutineInspectionBody');
+            body.innerHTML = '';
+            list.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 font-semibold text-brand-400">${item.time}</td>
+                    <td class="p-2 text-slate-200">${item.title}</td>
+                    <td class="p-2"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.type}</span></td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // ROUTINE ENGINE
+        function initRoutine() {
+            const saved = localStorage.getItem(STORAGE_ROUTINE);
+            if (!saved) localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(defaultRoutine));
+        }
+
+        function getRoutine() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_ROUTINE)) || defaultRoutine; }
+            catch (e) { return defaultRoutine; }
+        }
+
+        function renderRoutineTable() {
+            const list = getRoutine();
+            const body = document.getElementById('routineTableBody');
+            body.innerHTML = '';
+
+            list.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-xs text-brand-400">${item.time}</td>
+                    <td class="p-3 font-medium text-xs text-slate-200">${item.title}</td>
+                    <td class="p-3 text-xs"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.type}</span></td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteRoutineItem(${index})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function openAddRoutineModal() { document.getElementById('routineModal').classList.remove('hidden'); }
+        function closeAddRoutineModal() { document.getElementById('routineModal').classList.add('hidden'); }
+
+        function saveRoutineItem() {
+            const time = document.getElementById('rtTime').value.trim();
+            const title = document.getElementById('rtTitle').value.trim();
+            const type = document.getElementById('rtType').value;
+
+            if (!time || !title) { alert('সব ঘর পূরণ করুন'); return; }
+
+            const list = getRoutine();
+            list.push({ time, title, type });
+            localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
+            closeAddRoutineModal();
+            renderRoutineTable();
+            showToast('নতুন রুটিন আইটেম যুক্ত করা হয়েছে!');
+        }
+
+        function deleteRoutineItem(index) {
+            const list = getRoutine();
+            list.splice(index, 1);
+            localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
+            renderRoutineTable();
+        }
+
+        // LUSTMANAGER ANALYTICS ENGINE
+        function renderAnalytics() {
+            const logs = getJournalLogs();
+            const dates = Object.keys(logs).sort();
+
+            let totalClean = 0;
+            let currentStreak = 0;
+
+            dates.forEach(d => { if (logs[d].status === 'clean') totalClean++; });
+
+            const revDates = [...dates].reverse();
+            for (let d of revDates) {
+                if (logs[d].status === 'clean') currentStreak++;
+                else break;
+            }
+
+            document.getElementById('anaStreak').textContent = `${currentStreak} দিন`;
+            document.getElementById('anaClean').textContent = `${totalClean} দিন`;
+            document.getElementById('anaWeekly').textContent = dates.length ? `${Math.round((totalClean / Math.max(dates.length, 7)) * 100)}%` : '0%';
+            document.getElementById('anaMonthly').textContent = dates.length ? `${Math.round((totalClean / Math.max(dates.length, 30)) * 100)}%` : '0%';
+
+            const grid = document.getElementById('analyticsCalendarGrid');
+            grid.innerHTML = '';
+
+            const today = new Date();
+            for (let i = 27; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const dStr = d.toISOString().split('T')[0];
+                const entry = logs[dStr];
+
+                const box = document.createElement('div');
+                box.className = "p-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all";
+
+                if (entry) {
+                    if (entry.status === 'clean') {
+                        box.className += " bg-emerald-500/20 border-emerald-500/40 text-emerald-300";
+                    } else {
+                        box.className += " bg-rose-500/20 border-rose-500/40 text-rose-300";
+                    }
+                } else {
+                    box.className += " bg-slate-800/40 border-slate-800 text-slate-600";
+                }
+
+                box.innerHTML = `
+                    <span class="text-[10px] opacity-70">${d.getDate()}</span>
+                    <i class="fa-solid ${entry ? (entry.status === 'clean' ? 'fa-check text-xs' : 'fa-xmark text-xs') : 'fa-minus text-[10px]'}"></i>
+                `;
+                grid.appendChild(box);
+            }
+        }
+
+        function updateGlobalStats() {
+            const logs = getJournalLogs();
+            const dates = Object.keys(logs).sort();
+
+            let cleanCount = 0;
+            let currentStreak = 0;
+
+            dates.forEach(d => { if (logs[d].status === 'clean') cleanCount++; });
+
+            const revDates = [...dates].reverse();
+            for (let d of revDates) {
+                if (logs[d].status === 'clean') currentStreak++;
+                else break;
+            }
+
+            document.getElementById('headClean').textContent = cleanCount;
+            document.getElementById('headStreak').textContent = `${currentStreak} দিন`;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastMessage');
+            document.getElementById('toastText').textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>
