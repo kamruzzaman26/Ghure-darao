@@ -67,6 +67,7 @@
         <div class="flex rounded-xl bg-slate-800 p-1 text-sm"><button id="authLoginTab" onclick="setAuthMode('login')" class="flex-1 rounded-lg py-2 bg-brand-600 text-white font-bold">লগইন</button><button id="authRegisterTab" onclick="setAuthMode('register')" class="flex-1 rounded-lg py-2 text-slate-400 font-bold">রেজিস্ট্রেশন</button></div>
         <div class="space-y-3"><div id="authNameWrap" class="hidden"><label class="block text-xs text-slate-300 mb-1">সম্পূর্ণ নাম</label><input id="authFullName" class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="আপনার নাম"></div><div><label class="block text-xs text-slate-300 mb-1">ইমেইল</label><input id="loginUsername" type="email" autocomplete="username" class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="name@example.com"></div><div><label class="block text-xs text-slate-300 mb-1">পাসওয়ার্ড</label><input id="loginPassword" type="password" minlength="8" autocomplete="current-password" class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="কমপক্ষে ৮ অক্ষর"></div><div id="inviteCodeWrap" class="hidden"><label class="block text-xs text-slate-300 mb-1">Partner Invite Code</label><input id="inviteCode" class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white" placeholder="পার্টনারের কোড"></div></div>
         <button type="button" onclick="handleAuth()" class="w-full py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold rounded-xl"><span id="authSubmitLabel">লগইন করুন</span></button><button id="forgotPasswordBtn" type="button" onclick="resetPassword()" class="w-full text-xs text-sky-400">পাসওয়ার্ড ভুলে গেছেন?</button><p id="authMessage" class="text-xs text-center text-slate-400" aria-live="polite">নতুন Partner ও Client আলাদাভাবে নিবন্ধন করতে পারবেন।</p>
+        <button id="resendVerificationBtn" type="button" onclick="resendVerificationEmail()" class="hidden w-full text-xs text-amber-300 underline">ভেরিফিকেশন ইমেইল আবার পাঠান</button>
       </div>
     </div>
 
@@ -419,7 +420,10 @@
             initRoutine();
             if (!window.supabase) { setAuthMessage('নিরাপদ সার্ভিস লোড হয়নি।', true); return; }
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            const { data: { session } } = await supabaseClient.auth.getSession();
+            const authError=new URLSearchParams(window.location.search).get('error_description')||new URLSearchParams(window.location.hash.slice(1)).get('error_description');
+            if(authError){setAuthMessage('ইমেইল ভেরিফিকেশন সম্পন্ন হয়নি: '+decodeURIComponent(authError.replace(/\+/g,' ')),true);}
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+            if(sessionError){setAuthMessage('সেশন যাচাই করা যায়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।',true);}
             currentSession = session;
             if (session) await enterAuthenticatedApp();
             const today = new Date().toLocaleDateString('en-CA');
@@ -453,15 +457,27 @@
                 if(!fullName){setAuthMessage('আপনার নাম লিখুন।',true);return;}
                 const code=document.getElementById('inviteCode').value.trim();
                 if(currentRole==='client'&&!code){setAuthMessage('Client Registration-এর জন্য Partner Invite Code আবশ্যক।',true);return;}
-                const {data,error}=await supabaseClient.auth.signUp({email,password,options:{data:{role:currentRole,full_name:fullName,invite_code:currentRole==='client'?code:null}}});
+                const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+window.location.pathname,data:{role:currentRole,full_name:fullName,invite_code:currentRole==='client'?code:null}}});
                 if(error)throw error;
                 if(data.session){currentSession=data.session;await enterAuthenticatedApp();}
-                else setAuthMessage('রেজিস্ট্রেশন হয়েছে। ইমেইল যাচাই হলে আপনার Invite Code অনুযায়ী Partner-এর সঙ্গে যুক্ত হবে।');
+                else {document.getElementById('resendVerificationBtn').classList.remove('hidden');setAuthMessage('রেজিস্ট্রেশন অনুরোধ গ্রহণ হয়েছে। ইনবক্স/Spam দেখুন। ইমেইলের Verify link এই ওয়েবসাইটেই ফিরিয়ে আনবে।');}
               }else{
                 const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
                 if(error)throw error;currentSession=data.session;await enterAuthenticatedApp();
               }
             }catch(err){setAuthMessage(err.message||'অনুরোধ সম্পন্ন হয়নি।',true);}
+        }
+        async function resendVerificationEmail(){
+            const email=document.getElementById('loginUsername').value.trim();
+            if(!email){setAuthMessage('আগে রেজিস্ট্রেশনের ইমেইল লিখুন।',true);return;}
+            try{
+              const {error}=await supabaseClient.auth.resend({type:'signup',email,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
+              if(error)throw error;
+              setAuthMessage('ভেরিফিকেশন ইমেইল আবার পাঠানো হয়েছে। Inbox, Spam ও Promotions দেখুন।');
+            }catch(err){
+              const msg=err.message||'ইমেইল পাঠানো যায়নি।';
+              setAuthMessage(msg.includes('after')||msg.includes('seconds')?'নিরাপত্তার জন্য কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।':msg,true);
+            }
         }
         async function resetPassword(){
             const email=document.getElementById('loginUsername').value.trim();
