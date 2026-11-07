@@ -712,8 +712,8 @@
             await loadCloudReports();
         }
 
-        function renderSisterRoutineInspection() {
-            const list = getRoutine();
+        function renderSisterRoutineInspection(listOverride) {
+            const list = listOverride || getRoutine();
             const body = document.getElementById('sisterRoutineInspectionBody');
             body.innerHTML = '';
             list.forEach(item => {
@@ -854,6 +854,14 @@
           const logs={};
           filtered.forEach(r=>{logs[r.report_date]={date:r.report_date,status:r.status,block1:r.block1,block2:r.block2,block3:r.block3,block4:r.block4,block5:r.block5,triggerPoint:r.trigger_point,habitSun:r.habit_sun,habitExer:r.habit_exercise,habitDiet:r.habit_diet,sisterEval:r.report_reviews?.length?{notes:r.report_reviews[r.report_reviews.length-1].comment}:null};});
           localStorage.setItem(STORAGE_JOURNAL,JSON.stringify(logs));populateSisterDateSelect();
+          loadPartnerClientRoutine(clientId);
+        }
+        async function loadPartnerClientRoutine(clientId){
+          if(!clientId)return;
+          const {data:routines}=await supabaseClient.from('routines').select('id').eq('owner_id',clientId).limit(1);
+          if(!routines?.length){renderSisterRoutineInspection([]);return;}
+          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,sort_order').eq('routine_id',routines[0].id).order('sort_order');
+          renderSisterRoutineInspection((items||[]).map(x=>({time:x.start_time,title:x.title,type:'ব্যক্তিগত'})));
         }
         function copyPartnerCode(){const code=document.getElementById('partnerInviteCode').textContent;if(code&&code!=='কোড নেই'&&code!=='লোড হচ্ছে…')navigator.clipboard?.writeText(code).then(()=>showToast('Invite Code কপি হয়েছে।'));}
         function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
