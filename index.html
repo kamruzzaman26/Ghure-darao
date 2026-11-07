@@ -693,12 +693,12 @@
                     </span>
                 </div>
                 <div class="space-y-2 leading-relaxed">
-                    <p><b class="text-emerald-400">১. ৩টি ভালো কাজ:</b> ${item.block1 || '-'}</p>
-                    <p><b class="text-rose-400">২. কম ভালো অংশ (সততা):</b> ${item.block2 || '-'}</p>
-                    <p><b class="text-sky-400">৩. সিদ্ধান্ত:</b> ${item.block3 || '-'}</p>
-                    <p><b class="text-amber-400">৪. অর্জন/সাফল্য:</b> ${item.block4 || '-'}</p>
-                    <p><b class="text-indigo-400">৫. শিক্ষা ও প্রায়শ্চিত্ত:</b> ${item.block5 || '-'}</p>
-                    <p class="text-purple-300"><b>⚠️ চিহ্নিত ট্রিগার:</b> ${item.triggerPoint || 'নেই'}</p>
+                    <p><b class="text-emerald-400">১. ৩টি ভালো কাজ:</b> ${escapeHtml(item.block1 || '-')}</p>
+                    <p><b class="text-rose-400">২. কম ভালো অংশ (সততা):</b> ${escapeHtml(item.block2 || '-')}</p>
+                    <p><b class="text-sky-400">৩. সিদ্ধান্ত:</b> ${escapeHtml(item.block3 || '-')}</p>
+                    <p><b class="text-amber-400">৪. অর্জন/সাফল্য:</b> ${escapeHtml(item.block4 || '-')}</p>
+                    <p><b class="text-indigo-400">৫. শিক্ষা ও প্রায়শ্চিত্ত:</b> ${escapeHtml(item.block5 || '-')}</p>
+                    <p class="text-purple-300"><b>⚠️ চিহ্নিত ট্রিগার:</b> ${escapeHtml(item.triggerPoint || 'নেই')}</p>
                     <div class="pt-2 flex gap-4 text-[11px] text-slate-400">
                         <span>☀️ রোদ/হাঁটা: <b>${item.habitSun ? 'হ্যাঁ' : 'না'}</b></span>
                         <span>🏃‍♂️ ব্যায়াম: <b>${item.habitExer ? 'হ্যাঁ' : 'না'}</b></span>
@@ -735,9 +735,9 @@
             list.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-2 font-semibold text-brand-400">${item.time}</td>
-                    <td class="p-2 text-slate-200">${item.title}</td>
-                    <td class="p-2"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.type}</span></td>
+                    <td class="p-2 font-semibold text-brand-400">${escapeHtml(item.time)}</td>
+                    <td class="p-2 text-slate-200">${escapeHtml(item.title)}</td>
+                    <td class="p-2"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${escapeHtml(item.type)}</span></td>
                 `;
                 body.appendChild(tr);
             });
