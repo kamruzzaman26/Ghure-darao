@@ -194,6 +194,10 @@
                         <i class="fa-solid fa-paper-plane"></i>
                         <span>আজকের সারাদিনের রিপোর্ট বোনের কাছে জমা দিন</span>
                     </button>
+                    <div id="partnerFeedbackPanel" class="hidden bg-partner-500/10 border border-partner-500/30 rounded-2xl p-5">
+                      <h3 class="font-bold text-partner-300 mb-2"><i class="fa-solid fa-comment-dots mr-2"></i>আপনার পার্টনারের মন্তব্য</h3>
+                      <p id="partnerFeedbackText" class="text-sm text-slate-200 whitespace-pre-wrap"></p>
+                    </div>
                 </form>
             </section>
 
@@ -588,7 +592,15 @@
                 document.getElementById('habitSun').checked = !!d.habitSun;
                 document.getElementById('habitExer').checked = !!d.habitExer;
                 document.getElementById('habitDiet').checked = !!d.habitDiet;
-            } else {
+            }
+            const feedbackPanel=document.getElementById('partnerFeedbackPanel');
+            const feedbackText=document.getElementById('partnerFeedbackText');
+            if(feedbackPanel&&feedbackText){
+              const note=d&&d.sisterEval&&d.sisterEval.notes;
+              feedbackPanel.classList.toggle('hidden',!note);
+              feedbackText.textContent=note||'';
+            }
+            if (!d) {
                 document.getElementById('journalStatus').value = 'clean';
                 document.getElementById('block1').value = '';
                 document.getElementById('block2').value = '';
