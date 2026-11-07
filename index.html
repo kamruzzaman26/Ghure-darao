@@ -754,54 +754,70 @@
             catch (e) { return defaultRoutine; }
         }
 
+        let editingRoutineIndex = null;
+
         function renderRoutineTable() {
             const list = getRoutine();
             const body = document.getElementById('routineTableBody');
             body.innerHTML = '';
-
             list.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold text-xs text-brand-400">${item.time}</td>
-                    <td class="p-3 font-medium text-xs text-slate-200">${item.title}</td>
-                    <td class="p-3 text-xs"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.type}</span></td>
-                    <td class="p-3 text-right">
-                        <button onclick="deleteRoutineItem(${index})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    <td class="p-3 font-semibold text-xs text-brand-400">${escapeHtml(item.time)}</td>
+                    <td class="p-3 font-medium text-xs text-slate-200">${escapeHtml(item.title)}</td>
+                    <td class="p-3 text-xs"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${escapeHtml(item.type)}</span></td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button type="button" onclick="openAddRoutineModal(${index})" aria-label="রুটিন সম্পাদনা" class="text-sky-400 hover:text-sky-300 text-xs px-2 py-1"><i class="fa-solid fa-pen"></i> এডিট</button>
+                        <button type="button" onclick="deleteRoutineItem(${index})" aria-label="রুটিন মুছুন" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 body.appendChild(tr);
             });
         }
 
-        function openAddRoutineModal() { document.getElementById('routineModal').classList.remove('hidden'); }
-        function closeAddRoutineModal() { document.getElementById('routineModal').classList.add('hidden'); }
+        function openAddRoutineModal(index = null) {
+            editingRoutineIndex = Number.isInteger(index) ? index : null;
+            const list = getRoutine();
+            const item = editingRoutineIndex === null ? null : list[editingRoutineIndex];
+            document.getElementById('rtTime').value = item?.time || '';
+            document.getElementById('rtTitle').value = item?.title || '';
+            document.getElementById('rtType').value = item?.type || 'সালাত';
+            document.querySelector('#routineModal h3').textContent = item ? 'রুটিনের কার্যক্রম সম্পাদনা করুন' : 'রুটিনে নতুন কার্যক্রম যোগ করুন';
+            document.querySelector('#routineModal button[onclick="saveRoutineItem()"]').textContent = item ? 'পরিবর্তন সেভ করুন' : 'সেভ করুন';
+            document.getElementById('routineModal').classList.remove('hidden');
+        }
+        function closeAddRoutineModal() {
+            document.getElementById('routineModal').classList.add('hidden');
+            editingRoutineIndex = null;
+        }
 
         async function saveRoutineItem() {
             const time = document.getElementById('rtTime').value.trim();
             const title = document.getElementById('rtTitle').value.trim();
             const type = document.getElementById('rtType').value;
-
             if (!time || !title) { alert('সব ঘর পূরণ করুন'); return; }
-
             const list = getRoutine();
-            list.push({ time, title, type });
+            const wasEditing = editingRoutineIndex !== null;
+            if (wasEditing && list[editingRoutineIndex]) list[editingRoutineIndex] = { time, title, type };
+            else list.push({ time, title, type });
             localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
             await persistCloudRoutine(list);
             closeAddRoutineModal();
             renderRoutineTable();
-            showToast('নতুন রুটিন আইটেম যুক্ত করা হয়েছে!');
+            showToast(wasEditing ? 'রুটিনের পরিবর্তন সেভ হয়েছে।' : 'নতুন রুটিন আইটেম যুক্ত করা হয়েছে!');
         }
 
-        function deleteRoutineItem(index) {
+        async function deleteRoutineItem(index) {
             const list = getRoutine();
+            if (!Number.isInteger(index) || index < 0 || index >= list.length) return;
             list.splice(index, 1);
             localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
-            persistCloudRoutine(list);
+            await persistCloudRoutine(list);
             renderRoutineTable();
+            showToast('রুটিন আইটেম মুছে ফেলা হয়েছে।');
         }
 
-        // LUSTMANAGER ANALYTICS ENGINE
-        function renderAnalytics() {
+        // LUSTMANAGER ANALYTICS ENGINE        function renderAnalytics() {
             const logs=getJournalLogs(), dates=Object.keys(logs).sort();
             const totalClean=dates.filter(d=>logs[d].status==='clean').length;
             let streak=0, cursor=new Date(); cursor.setHours(0,0,0,0);
