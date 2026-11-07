@@ -785,53 +785,33 @@
 
         // LUSTMANAGER ANALYTICS ENGINE
         function renderAnalytics() {
-            const logs = getJournalLogs();
-            const dates = Object.keys(logs).sort();
-
-            let totalClean = 0;
-            let currentStreak = 0;
-
-            dates.forEach(d => { if (logs[d].status === 'clean') totalClean++; });
-
-            const revDates = [...dates].reverse();
-            for (let d of revDates) {
-                if (logs[d].status === 'clean') currentStreak++;
-                else break;
-            }
-
-            document.getElementById('anaStreak').textContent = `${currentStreak} দিন`;
-            document.getElementById('anaClean').textContent = `${totalClean} দিন`;
-            document.getElementById('anaWeekly').textContent = dates.length ? `${Math.round((totalClean / Math.max(dates.length, 7)) * 100)}%` : '0%';
-            document.getElementById('anaMonthly').textContent = dates.length ? `${Math.round((totalClean / Math.max(dates.length, 30)) * 100)}%` : '0%';
-
-            const grid = document.getElementById('analyticsCalendarGrid');
-            grid.innerHTML = '';
-
-            const today = new Date();
-            for (let i = 27; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                const dStr = d.toISOString().split('T')[0];
-                const entry = logs[dStr];
-
-                const box = document.createElement('div');
-                box.className = "p-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all";
-
-                if (entry) {
-                    if (entry.status === 'clean') {
-                        box.className += " bg-emerald-500/20 border-emerald-500/40 text-emerald-300";
-                    } else {
-                        box.className += " bg-rose-500/20 border-rose-500/40 text-rose-300";
-                    }
-                } else {
-                    box.className += " bg-slate-800/40 border-slate-800 text-slate-600";
-                }
-
-                box.innerHTML = `
-                    <span class="text-[10px] opacity-70">${d.getDate()}</span>
-                    <i class="fa-solid ${entry ? (entry.status === 'clean' ? 'fa-check text-xs' : 'fa-xmark text-xs') : 'fa-minus text-[10px]'}"></i>
-                `;
-                grid.appendChild(box);
+            const logs=getJournalLogs(), dates=Object.keys(logs).sort();
+            const totalClean=dates.filter(d=>logs[d].status==='clean').length;
+            let streak=0, cursor=new Date(); cursor.setHours(0,0,0,0);
+            let dayKey=cursor.toLocaleDateString('en-CA');
+            if(!logs[dayKey]){cursor.setDate(cursor.getDate()-1);dayKey=cursor.toLocaleDateString('en-CA');}
+            while(logs[dayKey]&&logs[dayKey].status==='clean'){streak++;cursor.setDate(cursor.getDate()-1);dayKey=cursor.toLocaleDateString('en-CA');}
+            const now=new Date(), monthStart=new Date(now.getFullYear(),now.getMonth(),1), monthEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+            const monthDates=dates.filter(d=>d>=monthStart.toLocaleDateString('en-CA')&&d<=monthEnd.toLocaleDateString('en-CA'));
+            const monthClean=monthDates.filter(d=>logs[d].status==='clean').length;
+            const last7=dates.filter(d=>{const dt=new Date(d+'T00:00:00');return (now-dt)/86400000<7 && (now-dt)>=0;});
+            document.getElementById('anaStreak').textContent=streak+' দিন';
+            document.getElementById('anaClean').textContent=totalClean+' দিন';
+            document.getElementById('anaWeekly').textContent=last7.length?Math.round(last7.filter(d=>logs[d].status==='clean').length/7*100)+'%':'0%';
+            document.getElementById('anaMonthly').textContent=monthDates.length?Math.round(monthClean/monthEnd.getDate()*100)+'%':'0%';
+            const grid=document.getElementById('analyticsCalendarGrid');grid.innerHTML='';
+            const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0);
+            document.getElementById('calendarMonthLabel').textContent=calendarCursor.toLocaleDateString('bn-BD',{month:'long',year:'numeric'});
+            for(let pad=0;pad<first.getDay();pad++){const blank=document.createElement('div');grid.appendChild(blank);}
+            for(let n=1;n<=last.getDate();n++){
+              const d=new Date(y,m,n),key=d.toLocaleDateString('en-CA'),entry=logs[key],box=document.createElement('button');
+              box.type='button';box.className='min-h-12 p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all text-xs';
+              box.className+=entry?(entry.status==='clean'?' bg-emerald-500/20 border-emerald-500/40 text-emerald-300':' bg-rose-500/20 border-rose-500/40 text-rose-300'):' bg-slate-800/40 border-slate-800 text-slate-500';
+              if(key===new Date().toLocaleDateString('en-CA'))box.className+=' ring-1 ring-brand-400';
+              box.innerHTML='<span>'+n+'</span><span class="text-[10px]">'+(entry?(entry.status==='clean'?'✓':'×'):'·')+'</span>';
+              box.title=entry?(entry.status==='clean'?'Clean Day':'Relapsed Day'):'কোনো রিপোর্ট নেই';
+              box.onclick=()=>{if(currentRole==='client'){document.getElementById('journalDate').value=key;loadJournalDataForDate(key);switchTab('journal');}else{const sel=document.getElementById('sisterDateSelect');if(sel){sel.value=key;loadBrotherEntryForSister(key);}}};
+              grid.appendChild(box);
             }
         }
 
