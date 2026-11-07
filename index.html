@@ -261,9 +261,8 @@
                 </div>
 
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
-                    <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-days text-brand-400"></i> বিগত ২৮ দিনের ট্র্যাকিং ক্যালেন্ডার (LustManager Style)
-                    </h3>
+                    <div class="flex items-center justify-between gap-3 flex-wrap"><h3 class="font-bold text-sm text-slate-200 flex items-center gap-2"><i class="fa-solid fa-calendar-days text-brand-400"></i> মাসিক ট্র্যাকিং ক্যালেন্ডার</h3><div class="flex items-center gap-2"><button onclick="changeCalendarMonth(-1)" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200">‹</button><strong id="calendarMonthLabel" class="text-sm text-white min-w-28 text-center"></strong><button onclick="changeCalendarMonth(1)" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200">›</button></div></div>
+                    <div class="grid grid-cols-7 gap-2 text-center text-[11px] text-slate-500"><span>রবি</span><span>সোম</span><span>মঙ্গল</span><span>বুধ</span><span>বৃহঃ</span><span>শুক্র</span><span>শনি</span></div>
                     <div id="analyticsCalendarGrid" class="grid grid-cols-7 gap-2 text-center text-xs">
                         <!-- Populated JS -->
                     </div>
@@ -283,6 +282,10 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div class="bg-slate-800/80 rounded-xl p-4 border border-partner-700/40"><p class="text-xs text-slate-400 mb-1">আপনার Partner Invite Code</p><div class="flex items-center gap-2"><strong id="partnerInviteCode" class="text-xl tracking-widest text-white">লোড হচ্ছে…</strong><button onclick="copyPartnerCode()" class="px-3 py-2 rounded-lg bg-partner-700 text-white text-xs">কপি</button></div><p class="text-[11px] text-slate-500 mt-2">এই কোডটি ক্লায়েন্টকে দিন।</p></div>
+                      <div class="bg-slate-800/80 rounded-xl p-4 border border-slate-700"><p class="text-xs text-slate-400 mb-2">আপনার যুক্ত ক্লায়েন্ট</p><div id="partnerClientList" class="text-sm text-slate-200">লোড হচ্ছে…</div></div>
+                    </div>
                     <!-- Date Selection for Evaluation -->
                     <div class="space-y-4">
                         <div>
@@ -470,6 +473,8 @@
             if(error)throw error;currentRole=data.role;
             document.getElementById('loginScreen').classList.add('hidden');showDashboard();document.getElementById('mainDashboard').classList.remove('hidden');
             await loadCloudReports();
+            await loadCloudRoutine();
+            if(currentRole==='partner') await loadPartnerPanel();
         }
         async function handleLogout(){
             await supabaseClient.auth.signOut();currentSession=null;
@@ -764,6 +769,7 @@
             const list = getRoutine();
             list.push({ time, title, type });
             localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
+            await persistCloudRoutine(list);
             closeAddRoutineModal();
             renderRoutineTable();
             showToast('নতুন রুটিন আইটেম যুক্ত করা হয়েছে!');
@@ -773,6 +779,7 @@
             const list = getRoutine();
             list.splice(index, 1);
             localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
+            persistCloudRoutine(list);
             renderRoutineTable();
         }
 
@@ -847,6 +854,36 @@
             document.getElementById('headStreak').textContent = `${currentStreak} দিন`;
         }
 
+        let calendarCursor=new Date();
+        async function loadPartnerPanel(){
+          const {data:invite,error}=await supabaseClient.from('partner_profiles').select('invite_code').eq('user_id',currentSession.user.id).maybeSingle();
+          document.getElementById('partnerInviteCode').textContent=error?'কোড লোড হয়নি':(invite?.invite_code||'কোড নেই');
+          const {data:links}=await supabaseClient.from('partner_clients').select('client_id').eq('partner_id',currentSession.user.id);
+          const ids=(links||[]).map(x=>x.client_id);
+          if(!ids.length){document.getElementById('partnerClientList').textContent='এখনো কোনো ক্লায়েন্ট যুক্ত হয়নি।';return;}
+          const {data:profiles}=await supabaseClient.from('profiles').select('id,full_name').in('id',ids);
+          document.getElementById('partnerClientList').innerHTML=(profiles||[]).map(p=>'<div class="py-1 border-b border-slate-700">'+escapeHtml(p.full_name||'নাম দেওয়া হয়নি')+'</div>').join('');
+        }
+        function copyPartnerCode(){const code=document.getElementById('partnerInviteCode').textContent;if(code&&code!=='কোড নেই'&&code!=='লোড হচ্ছে…')navigator.clipboard?.writeText(code).then(()=>showToast('Invite Code কপি হয়েছে।'));}
+        function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+        async function loadCloudRoutine(){
+          if(!currentSession)return;
+          const {data:rows,error}=await supabaseClient.from('routines').select('id').eq('owner_id',currentSession.user.id).limit(1);
+          if(error)return;
+          let routineId=rows?.[0]?.id;
+          if(!routineId){const made=await supabaseClient.from('routines').insert({owner_id:currentSession.user.id,title:'আমার দৈনিক রুটিন'}).select('id').single();if(made.error)return;routineId=made.data.id;}
+          window.activeRoutineId=routineId;
+          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,sort_order').eq('routine_id',routineId).order('sort_order');
+          if(items?.length){localStorage.setItem(STORAGE_ROUTINE,JSON.stringify(items.map(x=>({time:x.start_time,title:x.title,type:'ব্যক্তিগত'}))));}
+          renderRoutineTable();
+        }
+        async function persistCloudRoutine(list){
+          if(!window.activeRoutineId)return;
+          const {error:delError}=await supabaseClient.from('routine_items').delete().eq('routine_id',window.activeRoutineId);
+          if(delError){showToast('রুটিন আপডেট হয়নি: '+delError.message);return;}
+          if(list.length){const rows=list.map((x,i)=>({routine_id:window.activeRoutineId,title:x.title,start_time:x.time||'',sort_order:i}));const {error}=await supabaseClient.from('routine_items').insert(rows);if(error){showToast('রুটিন সেভ হয়নি: '+error.message);return;}}
+        }
+        function changeCalendarMonth(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);renderAnalytics();}
         function showToast(msg) {
             const toast = document.getElementById('toastMessage');
             document.getElementById('toastText').textContent = msg;
