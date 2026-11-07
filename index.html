@@ -860,8 +860,8 @@
           if(!clientId)return;
           const {data:routines}=await supabaseClient.from('routines').select('id').eq('owner_id',clientId).limit(1);
           if(!routines?.length){renderSisterRoutineInspection([]);return;}
-          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,sort_order').eq('routine_id',routines[0].id).order('sort_order');
-          renderSisterRoutineInspection((items||[]).map(x=>({time:x.start_time,title:x.title,type:'ব্যক্তিগত'})));
+          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,end_time,time_label,category,sort_order').eq('routine_id',routines[0].id).order('sort_order');
+          renderSisterRoutineInspection((items||[]).map(x=>({time:x.time_label||[x.start_time,x.end_time].filter(Boolean).join(' - '),title:x.title,type:x.category||'ব্যক্তিগত'})));
         }
         function copyPartnerCode(){const code=document.getElementById('partnerInviteCode').textContent;if(code&&code!=='কোড নেই'&&code!=='লোড হচ্ছে…')navigator.clipboard?.writeText(code).then(()=>showToast('Invite Code কপি হয়েছে।'));}
         function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -872,15 +872,15 @@
           let routineId=rows?.[0]?.id;
           if(!routineId){const made=await supabaseClient.from('routines').insert({owner_id:currentSession.user.id,title:'আমার দৈনিক রুটিন'}).select('id').single();if(made.error)return;routineId=made.data.id;}
           window.activeRoutineId=routineId;
-          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,sort_order').eq('routine_id',routineId).order('sort_order');
-          if(items?.length){localStorage.setItem(STORAGE_ROUTINE,JSON.stringify(items.map(x=>({time:x.start_time,title:x.title,type:'ব্যক্তিগত'}))));}
+          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,end_time,time_label,category,sort_order').eq('routine_id',routineId).order('sort_order');
+          if(items?.length){localStorage.setItem(STORAGE_ROUTINE,JSON.stringify(items.map(x=>({time:x.time_label||[x.start_time,x.end_time].filter(Boolean).join(' - '),title:x.title,type:x.category||'ব্যক্তিগত'}))));}
           renderRoutineTable();
         }
         async function persistCloudRoutine(list){
           if(!window.activeRoutineId)return;
           const {error:delError}=await supabaseClient.from('routine_items').delete().eq('routine_id',window.activeRoutineId);
           if(delError){showToast('রুটিন আপডেট হয়নি: '+delError.message);return;}
-          if(list.length){const rows=list.map((x,i)=>({routine_id:window.activeRoutineId,title:x.title,start_time:x.time||'',sort_order:i}));const {error}=await supabaseClient.from('routine_items').insert(rows);if(error){showToast('রুটিন সেভ হয়নি: '+error.message);return;}}
+          if(list.length){const rows=list.map((x,i)=>{const match=String(x.time||'').match(/(\\d{1,2}:\\d{2})\\s*(?:-|–|to)\\s*(\\d{1,2}:\\d{2})/i);return {routine_id:window.activeRoutineId,title:x.title,time_label:x.time||'',category:x.type||'ব্যক্তিগত',start_time:match?match[1]:null,end_time:match?match[2]:null,sort_order:i};});const {error}=await supabaseClient.from('routine_items').insert(rows);if(error){showToast('রুটিন সেভ হয়নি: '+error.message);return;}}
         }
         function changeCalendarMonth(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);renderAnalytics();}
         function showToast(msg) {
