@@ -760,7 +760,7 @@
         function openAddRoutineModal() { document.getElementById('routineModal').classList.remove('hidden'); }
         function closeAddRoutineModal() { document.getElementById('routineModal').classList.add('hidden'); }
 
-        function saveRoutineItem() {
+        async function saveRoutineItem() {
             const time = document.getElementById('rtTime').value.trim();
             const title = document.getElementById('rtTitle').value.trim();
             const type = document.getElementById('rtType').value;
