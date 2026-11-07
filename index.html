@@ -542,7 +542,7 @@
             catch (e) { return {}; }
         }
 
-        function saveJournalEntry(e) {
+        async function saveJournalEntry(e) {
             e.preventDefault();
             const date = document.getElementById('journalDate').value;
             if (!date) return;
@@ -565,8 +565,12 @@
                 sisterEval: existingSister
             };
 
+            const entry=logs[date];
+            const payload={client_id:currentSession.user.id,report_date:date,status:entry.status,block1:entry.block1,block2:entry.block2,block3:entry.block3,block4:entry.block4,block5:entry.block5,trigger_point:entry.triggerPoint,habit_sun:entry.habitSun,habit_exercise:entry.habitExer,habit_diet:entry.habitDiet};
+            const {error}=await supabaseClient.from('daily_reports').upsert(payload,{onConflict:'client_id,report_date'});
+            if(error){showToast('রিপোর্ট জমা হয়নি: '+error.message);return;}
             localStorage.setItem(STORAGE_JOURNAL, JSON.stringify(logs));
-            showToast('আজকের রিপোর্ট সেভ হয়েছে ও বোনে কাছে পৌঁছেছে!');
+            showToast('রিপোর্ট নিরাপদে জমা হয়েছে।');
             updateGlobalStats();
         }
 
@@ -596,6 +600,19 @@
                 document.getElementById('habitExer').checked = false;
                 document.getElementById('habitDiet').checked = false;
             }
+        }
+
+        async function loadCloudReports(){
+            if(!currentSession)return;
+            const {data,error}=await supabaseClient.from('daily_reports').select('*,report_reviews(id,comment,created_at,partner_id)').order('report_date',{ascending:false}).limit(180);
+            if(error){showToast('রিপোর্ট লোড হয়নি: '+error.message);return;}
+            window.cloudReportRows=data||[];
+            const logs={};
+            window.cloudReportRows.forEach(r=>{logs[r.report_date]={date:r.report_date,status:r.status,block1:r.block1,block2:r.block2,block3:r.block3,block4:r.block4,block5:r.block5,triggerPoint:r.trigger_point,habitSun:r.habit_sun,habitExer:r.habit_exercise,habitDiet:r.habit_diet,sisterEval:r.report_reviews?.length?{notes:r.report_reviews[r.report_reviews.length-1].comment}:null};});
+            localStorage.setItem(STORAGE_JOURNAL,JSON.stringify(logs));
+            updateGlobalStats();
+            if(currentRole==='partner')populateSisterDateSelect();
+            if(currentRole==='client')renderAnalytics();
         }
 
         // SISTER DASHBOARD LOGIC
@@ -665,22 +682,16 @@
             }
         }
 
-        function saveSisterFeedback() {
-            const date = document.getElementById('sisterDateSelect').value;
-            if (!date) return;
-
-            const logs = getJournalLogs();
-            if (!logs[date]) return;
-
-            logs[date].sisterEval = {
-                rating: document.getElementById('sisterRating').value,
-                notes: document.getElementById('sisterNotes').value,
-                updatedAt: new Date().toISOString()
-            };
-
-            localStorage.setItem(STORAGE_JOURNAL, JSON.stringify(logs));
-            showToast('বোনের মূল্যায়ন সফলভাবে সংরক্ষিত হয়েছে!');
-            populateSisterDateSelect();
+        async function saveSisterFeedback() {
+            const date=document.getElementById('sisterDateSelect').value;
+            const report=(window.cloudReportRows||[]).find(r=>r.report_date===date);
+            if(!report){showToast('এই রিপোর্টটি সার্ভারে পাওয়া যায়নি।');return;}
+            const comment=document.getElementById('sisterNotes').value.trim();
+            if(!comment){showToast('মন্তব্য লিখুন।');return;}
+            const {error}=await supabaseClient.from('report_reviews').insert({report_id:report.id,partner_id:currentSession.user.id,comment});
+            if(error){showToast('মন্তব্য জমা হয়নি: '+error.message);return;}
+            showToast('মন্তব্য ক্লায়েন্টের কাছে পাঠানো হয়েছে।');
+            await loadCloudReports();
         }
 
         function renderSisterRoutineInspection() {
