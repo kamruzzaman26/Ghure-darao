@@ -36,7 +36,7 @@
         }
     </script>
     <style>
-        body { font-family: 'Hind Siliguri', sans-serif; }
+        body { font-family: 'Hind Siliguri', sans-serif; min-height:100%; height:auto; overflow-y:auto; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -44,6 +44,8 @@
 
         /* ===== Auth screen ===== */
         #loginScreen { --accent:#0ea5e9; --accent2:#6366f1; --accent-soft:rgba(14,165,233,.18); }
+        /* Keep decorative blobs clipped horizontally without blocking vertical page scroll. */
+        #loginScreen { overflow-x:clip; overflow-y:visible; min-height:100svh; height:auto; }
         .auth-blob { position:absolute; border-radius:9999px; filter:blur(90px); opacity:.35; pointer-events:none; }
         .auth-blob-1 { width:420px; height:420px; top:-120px; left:-100px; background:var(--accent); transition:background .4s; }
         .auth-blob-2 { width:380px; height:380px; bottom:-140px; right:-80px; background:var(--accent2); transition:background .4s; }
@@ -86,7 +88,7 @@
         @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
     </style>
 </head>
-<body class="h-full text-slate-100 antialiased flex flex-col bg-slate-950">
+<body class="min-h-full text-slate-100 antialiased flex flex-col bg-slate-950">
 
     <!-- Toast Notification -->
     <div id="toastMessage" class="hidden fixed top-6 right-6 z-50 bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all">
@@ -95,11 +97,11 @@
     </div>
 
     <!-- 1. AUTH SCREEN -->
-    <div id="loginScreen" class="min-h-screen w-full bg-slate-950 relative overflow-hidden">
+    <div id="loginScreen" class="min-h-screen w-full bg-slate-950 relative">
       <div class="auth-blob auth-blob-1" aria-hidden="true"></div>
       <div class="auth-blob auth-blob-2" aria-hidden="true"></div>
 
-      <div class="relative max-w-6xl mx-auto min-h-screen grid lg:grid-cols-2 gap-10 items-center px-4 py-8 sm:px-8">
+      <div class="relative max-w-6xl mx-auto min-h-screen grid lg:grid-cols-2 gap-10 items-start lg:items-center px-4 py-8 sm:px-8">
 
         <!-- Brand panel (desktop) -->
         <aside class="hidden lg:flex flex-col gap-8 pr-6">
@@ -995,8 +997,8 @@
 
         // ============ DASHBOARD NAVIGATION ============
         function showDashboard() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainDashboard').classList.remove('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');            document.getElementById('mainDashboard').classList.remove('hidden');
+
             const badge = document.getElementById('userRoleBadge');
             const nav = document.getElementById('navTabsContainer');
             nav.innerHTML = '';
