@@ -137,12 +137,12 @@
               <div>
                 <p class="text-xs font-semibold text-slate-400 mb-2">আপনি কোন ভূমিকায়?</p>
                 <div class="grid grid-cols-2 gap-3" role="group" aria-label="ভূমিকা নির্বাচন">
-                  <button type="button" onclick="selectRole('client')" id="roleBtnClient" data-auth-role="client" aria-pressed="true" class="role-card">
+                  <button type="button" id="roleBtnClient" data-auth-role="client" aria-pressed="true" class="role-card">
                     <span class="role-icon"><i class="fa-solid fa-user"></i></span>
                     <span class="block font-bold text-sm">ক্লায়েন্ট</span>
                     <span class="block text-[11px] text-slate-400 mt-0.5 leading-snug">নিজের ডায়েরি ও রুটিন</span>
                   </button>
-                  <button type="button" onclick="selectRole('partner')" id="roleBtnPartner" data-auth-role="partner" aria-pressed="false" class="role-card">
+                  <button type="button" id="roleBtnPartner" data-auth-role="partner" aria-pressed="false" class="role-card">
                     <span class="role-icon"><i class="fa-solid fa-user-shield"></i></span>
                     <span class="block font-bold text-sm">পার্টনার</span>
                     <span class="block text-[11px] text-slate-400 mt-0.5 leading-snug">ক্লায়েন্টকে সহযোগিতা</span>
@@ -152,8 +152,8 @@
 
               <!-- Login / Register tabs -->
               <div class="grid grid-cols-2 rounded-xl bg-slate-800 p-1 text-sm" role="tablist">
-                <button type="button" onclick="setAuthMode('login')" id="authLoginTab" data-auth-mode="login" role="tab" aria-selected="true" class="auth-tab">লগইন</button>
-                <button type="button" onclick="setAuthMode('register')" id="authRegisterTab" data-auth-mode="register" role="tab" aria-selected="false" class="auth-tab">নতুন রেজিস্ট্রেশন</button>
+                <button type="button" id="authLoginTab" data-auth-mode="login" role="tab" aria-selected="true" class="auth-tab">লগইন</button>
+                <button type="button" id="authRegisterTab" data-auth-mode="register" role="tab" aria-selected="false" class="auth-tab">নতুন রেজিস্ট্রেশন</button>
               </div>
 
               <!-- Register info box -->
@@ -698,6 +698,10 @@
 
         function initAuthUI() {
             document.addEventListener('click', function(event) {
+                const roleButton = event.target.closest('[data-auth-role]');
+                if (roleButton) { event.preventDefault(); selectRole(roleButton.dataset.authRole); return; }
+                const modeButton = event.target.closest('[data-auth-mode]');
+                if (modeButton) { event.preventDefault(); setAuthMode(modeButton.dataset.authMode); return; }
                 const pwButton = event.target.closest('[data-toggle-pw]');
                 if (pwButton) {
                     event.preventDefault();
@@ -993,3 +997,554 @@
         function showDashboard() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
+
+            const badge = document.getElementById('userRoleBadge');
+            const nav = document.getElementById('navTabsContainer');
+            nav.innerHTML = '';
+
+            if (currentRole === 'client') {
+                badge.textContent = 'ক্লায়েন্ট পোর্টাল';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30';
+                
+                nav.innerHTML = `
+                    <button id="tabBtnJournal" onclick="switchTab('journal')" class="px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-brand-600 text-white shadow-lg">
+                        <i class="fa-solid fa-pen-to-square"></i> আজকের ডায়েরি
+                    </button>
+                    <button id="tabBtnFocus" onclick="switchTab('focus')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-stopwatch text-sky-400"></i> ফোকাস ও টাস্ক
+                    </button>
+                    <button id="tabBtnRoutine" onclick="switchTab('routine')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-calendar-days text-purple-400"></i> রুটিন এডিটর
+                    </button>
+                    <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i> অ্যানালিটিক্স
+                    </button>
+                `;
+                switchTab('journal');
+
+            } else {
+                badge.textContent = 'পার্টনার ড্যাশবোর্ড';
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-partner-500/20 text-partner-300 border border-partner-500/30';
+                
+                nav.innerHTML = `
+                    <button id="tabBtnSister" onclick="switchTab('sister')" class="px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-partner-600 text-white shadow-lg">
+                        <i class="fa-solid fa-user-shield"></i> ক্লায়েন্ট মূল্যায়ন
+                    </button>
+                    <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                        <i class="fa-solid fa-chart-line text-emerald-400"></i> ক্লায়েন্ট অগ্রগতি
+                    </button>
+                `;
+                switchTab('sister');
+            }
+
+            document.getElementById('headStats').style.display = currentRole === 'client' ? '' : 'none';
+            updateGlobalStats();
+        }
+
+        function switchTab(tab) {
+            // Hide all sections
+            ['secBrotherJournal', 'secFocus', 'secBrotherRoutine', 'secAnalytics', 'secSisterDashboard'].forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.add('hidden');
+            });
+
+            // Reset tab button styles
+            const nav = document.getElementById('navTabsContainer');
+            if (nav) {
+                Array.from(nav.children).forEach(btn => {
+                    btn.className = 'px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800';
+                });
+            }
+
+            // Show active section and style button
+            if (tab === 'journal') {
+                document.getElementById('secBrotherJournal').classList.remove('hidden');
+                document.getElementById('tabBtnJournal').className = 'px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-brand-600 text-white shadow-lg';
+            } else if (tab === 'focus') {
+                document.getElementById('secFocus').classList.remove('hidden');
+                document.getElementById('tabBtnFocus').className = 'px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-sky-600 text-white shadow-lg';
+            } else if (tab === 'routine') {
+                document.getElementById('secBrotherRoutine').classList.remove('hidden');
+                document.getElementById('tabBtnRoutine').className = 'px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-purple-600 text-white shadow-lg';
+                renderRoutineTable();
+            } else if (tab === 'analytics') {
+                document.getElementById('secAnalytics').classList.remove('hidden');
+                document.getElementById('tabBtnAnalytics').className = 'px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-emerald-600 text-white shadow-lg';
+                renderAnalytics();
+            } else if (tab === 'sister') {
+                document.getElementById('secSisterDashboard').classList.remove('hidden');
+                document.getElementById('tabBtnSister').className = 'px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-partner-600 text-white shadow-lg';
+                populateSisterDateSelect();
+                renderSisterRoutineInspection();
+            }
+        }
+
+        // ============ POMODORO TIMER LOGIC ============
+        let timer;
+        let timeLeft = 25 * 60; // 25 minutes
+        let isRunning = false;
+
+        function updateDisplay() {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById('timer').innerText = 
+                (minutes < 10 ? "0" : "") + minutes + ":" + 
+                (seconds < 10 ? "0" : "") + seconds;
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                timer = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        clearInterval(timer);
+                        isRunning = false;
+                        showToast("সময় শেষ! ৫ মিনিটের ব্রেক নিন।");
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(timer);
+            isRunning = false;
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            isRunning = false;
+            timeLeft = 25 * 60;
+            updateDisplay();
+        }
+
+        // ============ TO-DO LIST LOGIC ============
+        function loadTasks() {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_TASKS)) || [];
+            let taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<p class="text-sm text-slate-500 italic text-center mt-4">কোনো কাজ যুক্ত করা নেই।</p>';
+                return;
+            }
+
+            tasks.forEach((task, index) => {
+                let li = document.createElement('li');
+                li.className = "flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700 shadow-sm transition-all";
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 w-full cursor-pointer" onclick="toggleTask(${index})">
+                        <div class="w-5 h-5 rounded border ${task.completed ? 'bg-purple-500 border-purple-500 flex items-center justify-center' : 'border-slate-500 bg-slate-900'}">
+                            ${task.completed ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}
+                        </div>
+                        <span class="text-sm select-none ${task.completed ? 'line-through text-slate-500' : 'text-slate-200'}">${escapeHtml(task.text)}</span>
+                    </div>
+                    <button onclick="deleteTask(${index}); event.stopPropagation();" class="text-rose-400 hover:text-rose-300 transition px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+
+        function addTask() {
+            let input = document.getElementById('task-input');
+            let text = input.value.trim();
+            if (text) {
+                let tasks = JSON.parse(localStorage.getItem(STORAGE_TASKS)) || [];
+                tasks.push({ text: text, completed: false });
+                localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
+                input.value = '';
+                loadTasks();
+            }
+        }
+
+        function toggleTask(index) {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_TASKS));
+            tasks[index].completed = !tasks[index].completed;
+            localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
+            loadTasks();
+        }
+
+        function deleteTask(index) {
+            let tasks = JSON.parse(localStorage.getItem(STORAGE_TASKS));
+            tasks.splice(index, 1);
+            localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
+            loadTasks();
+        }
+
+        // Allow pressing Enter to add task
+        document.getElementById('task-input')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') addTask();
+        });
+
+
+        // ============ JOURNAL & REPORTS LOGIC ============
+        function getJournalLogs() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_JOURNAL)) || {}; }
+            catch (e) { return {}; }
+        }
+
+        async function saveJournalEntry(e) {
+            e.preventDefault();
+            const date = document.getElementById('journalDate').value;
+            if (!date) return;
+
+            const logs = getJournalLogs();
+            const existingSister = logs[date] ? logs[date].sisterEval : null;
+
+            logs[date] = {
+                date: date,
+                status: document.getElementById('journalStatus').value,
+                block1: document.getElementById('block1').value,
+                block2: document.getElementById('block2').value,
+                block3: document.getElementById('block3').value,
+                block4: document.getElementById('block4').value,
+                block5: document.getElementById('block5').value,
+                triggerPoint: document.getElementById('triggerPoint').value,
+                habitSun: document.getElementById('habitSun').checked,
+                habitExer: document.getElementById('habitExer').checked,
+                habitDiet: document.getElementById('habitDiet').checked,
+                sisterEval: existingSister
+            };
+
+            const entry=logs[date];
+            const payload={client_id:currentSession.user.id,report_date:date,status:entry.status,block1:entry.block1,block2:entry.block2,block3:entry.block3,block4:entry.block4,block5:entry.block5,trigger_point:entry.triggerPoint,habit_sun:entry.habitSun,habit_exercise:entry.habitExer,habit_diet:entry.habitDiet};
+            const {error}=await supabaseClient.from('daily_reports').upsert(payload,{onConflict:'client_id,report_date'});
+            if(error){showToast('রিপোর্ট জমা হয়নি: '+error.message);return;}
+            localStorage.setItem(STORAGE_JOURNAL, JSON.stringify(logs));
+            showToast('রিপোর্ট নিরাপদে জমা হয়েছে।');
+            updateGlobalStats();
+        }
+
+        function loadJournalDataForDate(date) {
+            const logs = getJournalLogs();
+            const d = logs[date];
+            if (d) {
+                document.getElementById('journalStatus').value = d.status || 'clean';
+                document.getElementById('block1').value = d.block1 || '';
+                document.getElementById('block2').value = d.block2 || '';
+                document.getElementById('block3').value = d.block3 || '';
+                document.getElementById('block4').value = d.block4 || '';
+                document.getElementById('block5').value = d.block5 || '';
+                document.getElementById('triggerPoint').value = d.triggerPoint || '';
+                document.getElementById('habitSun').checked = !!d.habitSun;
+                document.getElementById('habitExer').checked = !!d.habitExer;
+                document.getElementById('habitDiet').checked = !!d.habitDiet;
+            }
+            const feedbackPanel=document.getElementById('partnerFeedbackPanel');
+            const feedbackText=document.getElementById('partnerFeedbackText');
+            if(feedbackPanel&&feedbackText){
+              const note=d&&d.sisterEval&&d.sisterEval.notes;
+              feedbackPanel.classList.toggle('hidden',!note);
+              feedbackText.textContent=note||'';
+            }
+            if (!d) {
+                document.getElementById('journalStatus').value = 'clean';
+                document.getElementById('block1').value = '';
+                document.getElementById('block2').value = '';
+                document.getElementById('block3').value = '';
+                document.getElementById('block4').value = '';
+                document.getElementById('block5').value = '';
+                document.getElementById('triggerPoint').value = '';
+                document.getElementById('habitSun').checked = false;
+                document.getElementById('habitExer').checked = false;
+                document.getElementById('habitDiet').checked = false;
+            }
+        }
+
+        async function loadCloudReports(){
+            if(!currentSession)return;
+            const {data,error}=await supabaseClient.from('daily_reports').select('*,report_reviews(id,comment,created_at,partner_id)').order('report_date',{ascending:false}).limit(180);
+            if(error)return;
+            window.cloudReportRows=data||[];
+            const logs={};
+            window.cloudReportRows.forEach(r=>{logs[r.report_date]={date:r.report_date,status:r.status,block1:r.block1,block2:r.block2,block3:r.block3,block4:r.block4,block5:r.block5,triggerPoint:r.trigger_point,habitSun:r.habit_sun,habitExer:r.habit_exercise,habitDiet:r.habit_diet,sisterEval:r.report_reviews?.length?{notes:r.report_reviews[r.report_reviews.length-1].comment}:null};});
+            localStorage.setItem(STORAGE_JOURNAL,JSON.stringify(logs));
+            updateGlobalStats();
+            if(currentRole==='partner'&&!document.getElementById('partnerClientSelect'))populateSisterDateSelect();
+            if(currentRole==='client')renderAnalytics();
+        }
+
+        // ============ PARTNER/SISTER LOGIC ============
+        function populateSisterDateSelect() {
+            const logs = getJournalLogs();
+            const sel = document.getElementById('sisterDateSelect');
+            sel.innerHTML = '';
+            const sorted = Object.keys(logs).sort().reverse();
+
+            if (sorted.length === 0) {
+                sel.innerHTML = '<option value="">ক্লায়েন্টের কোনো এন্ট্রি জমা হয়নি</option>';
+                loadBrotherEntryForSister('');
+                return;
+            }
+
+            sorted.forEach(d => {
+                const item = logs[d];
+                const hasEval = item.sisterEval && item.sisterEval.notes;
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = `${d} - ${item.status === 'clean' ? '🟢 ক্লিন ডে' : '🔴 রিল্যাপস ডে'} ${hasEval ? ' (মূল্যায়িত ✓)' : ' (অপেক্ষমাণ ⏳)'}`;
+                sel.appendChild(opt);
+            });
+
+            if (sorted.length > 0) loadBrotherEntryForSister(sorted[0]);
+        }
+
+        function loadBrotherEntryForSister(date) {
+            const card = document.getElementById('brotherReportCard');
+            if (!date) {
+                card.innerHTML = '<p class="italic text-slate-500">কোনো ডাটা নেই।</p>';
+                return;
+            }
+
+            const logs = getJournalLogs();
+            const item = logs[date];
+            if (!item) return;
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                    <span class="font-bold text-white text-xs">রিপোর্ট তারিখ: ${item.date}</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${item.status === 'clean' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                        ${item.status === 'clean' ? '🟢 Clean Day' : '🔴 Relapsed Day'}
+                    </span>
+                </div>
+                <div class="space-y-2 leading-relaxed">
+                    <p><b class="text-emerald-400">১. ৩টি ভালো কাজ:</b> ${escapeHtml(item.block1 || '-')}</p>
+                    <p><b class="text-rose-400">২. কম ভালো অংশ (সততা):</b> ${escapeHtml(item.block2 || '-')}</p>
+                    <p><b class="text-sky-400">৩. সিদ্ধান্ত:</b> ${escapeHtml(item.block3 || '-')}</p>
+                    <p><b class="text-amber-400">৪. অর্জন/সাফল্য:</b> ${escapeHtml(item.block4 || '-')}</p>
+                    <p><b class="text-indigo-400">৫. শিক্ষা ও প্রায়শ্চিত্ত:</b> ${escapeHtml(item.block5 || '-')}</p>
+                    <p class="text-purple-300"><b>⚠️ চিহ্নিত ট্রিগার:</b> ${escapeHtml(item.triggerPoint || 'নেই')}</p>
+                    <div class="pt-2 flex gap-4 text-[11px] text-slate-400">
+                        <span>☀️ রোদ/হাঁটা: <b>${item.habitSun ? 'হ্যাঁ' : 'না'}</b></span>
+                        <span>🏃‍♂️ ব্যায়াম: <b>${item.habitExer ? 'হ্যাঁ' : 'না'}</b></span>
+                        <span>🍌 ডায়েট: <b>${item.habitDiet ? 'হ্যাঁ' : 'না'}</b></span>
+                    </div>
+                </div>
+            `;
+
+            if (item.sisterEval) {
+                document.getElementById('sisterRating').value = item.sisterEval.rating || '5';
+                document.getElementById('sisterNotes').value = item.sisterEval.notes || '';
+            } else {
+                document.getElementById('sisterRating').value = '5';
+                document.getElementById('sisterNotes').value = '';
+            }
+        }
+
+        async function saveSisterFeedback() {
+            const date=document.getElementById('sisterDateSelect').value;
+            const report=(window.cloudReportRows||[]).find(r=>r.report_date===date);
+            if(!report){showToast('এই রিপোর্টটি সার্ভারে পাওয়া যায়নি।');return;}
+            const comment=document.getElementById('sisterNotes').value.trim();
+            if(!comment){showToast('মন্তব্য লিখুন।');return;}
+            const {error}=await supabaseClient.from('report_reviews').insert({report_id:report.id,partner_id:currentSession.user.id,comment});
+            if(error){showToast('মন্তব্য জমা হয়নি: '+error.message);return;}
+            showToast('মন্তব্য ক্লায়েন্টের কাছে পাঠানো হয়েছে।');
+            await loadCloudReports();
+        }
+
+        function renderSisterRoutineInspection(listOverride) {
+            const list = listOverride || getRoutine();
+            const body = document.getElementById('sisterRoutineInspectionBody');
+            body.innerHTML = '';
+            list.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 font-semibold text-brand-400">${escapeHtml(item.time)}</td>
+                    <td class="p-2 text-slate-200">${escapeHtml(item.title)}</td>
+                    <td class="p-2"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${escapeHtml(item.type)}</span></td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // ============ ROUTINE ENGINE ============
+        function initRoutine() {
+            const saved = localStorage.getItem(STORAGE_ROUTINE);
+            if (!saved) localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(defaultRoutine));
+        }
+
+        function getRoutine() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_ROUTINE)) || defaultRoutine; }
+            catch (e) { return defaultRoutine; }
+        }
+
+        let editingRoutineIndex = null;
+
+        function renderRoutineTable() {
+            const list = getRoutine();
+            const body = document.getElementById('routineTableBody');
+            body.innerHTML = '';
+            list.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-xs text-brand-400">${escapeHtml(item.time)}</td>
+                    <td class="p-3 font-medium text-xs text-slate-200">${escapeHtml(item.title)}</td>
+                    <td class="p-3 text-xs"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${escapeHtml(item.type)}</span></td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button type="button" onclick="openAddRoutineModal(${index})" aria-label="রুটিন সম্পাদনা" class="text-sky-400 hover:text-sky-300 text-xs px-2 py-1"><i class="fa-solid fa-pen"></i> এডিট</button>
+                        <button type="button" onclick="deleteRoutineItem(${index})" aria-label="রুটিন মুছুন" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function openAddRoutineModal(index = null) {
+            editingRoutineIndex = Number.isInteger(index) ? index : null;
+            const list = getRoutine();
+            const item = editingRoutineIndex === null ? null : list[editingRoutineIndex];
+            document.getElementById('rtTime').value = item?.time || '';
+            document.getElementById('rtTitle').value = item?.title || '';
+            document.getElementById('rtType').value = item?.type || 'সালাত';
+            document.querySelector('#routineModal h3').textContent = item ? 'রুটিনের কার্যক্রম সম্পাদনা করুন' : 'রুটিনে নতুন কার্যক্রম যোগ করুন';
+            document.querySelector('#routineModal button[onclick="saveRoutineItem()"]').textContent = item ? 'পরিবর্তন সেভ করুন' : 'সেভ করুন';
+            document.getElementById('routineModal').classList.remove('hidden');
+        }
+        
+        function closeAddRoutineModal() {
+            document.getElementById('routineModal').classList.add('hidden');
+            editingRoutineIndex = null;
+        }
+
+        async function saveRoutineItem() {
+            const time = document.getElementById('rtTime').value.trim();
+            const title = document.getElementById('rtTitle').value.trim();
+            const type = document.getElementById('rtType').value;
+            if (!time || !title) { alert('সব ঘর পূরণ করুন'); return; }
+            const list = getRoutine();
+            const wasEditing = editingRoutineIndex !== null;
+            if (wasEditing && list[editingRoutineIndex]) list[editingRoutineIndex] = { time, title, type };
+            else list.push({ time, title, type });
+            localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
+            await persistCloudRoutine(list);
+            closeAddRoutineModal();
+            renderRoutineTable();
+            showToast(wasEditing ? 'রুটিনের পরিবর্তন সেভ হয়েছে।' : 'নতুন রুটিন আইটেম যুক্ত করা হয়েছে!');
+        }
+
+        async function deleteRoutineItem(index) {
+            const list = getRoutine();
+            if (!Number.isInteger(index) || index < 0 || index >= list.length) return;
+            list.splice(index, 1);
+            localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
+            await persistCloudRoutine(list);
+            renderRoutineTable();
+            showToast('রুটিন আইটেম মুছে ফেলা হয়েছে।');
+        }
+
+        // ============ ANALYTICS ENGINE ============
+        function renderAnalytics() {
+            const logs=getJournalLogs(), dates=Object.keys(logs).sort();
+            const totalClean=dates.filter(d=>logs[d].status==='clean').length;
+            let streak=0, cursor=new Date(); cursor.setHours(0,0,0,0);
+            let dayKey=cursor.toLocaleDateString('en-CA');
+            if(!logs[dayKey]){cursor.setDate(cursor.getDate()-1);dayKey=cursor.toLocaleDateString('en-CA');}
+            while(logs[dayKey]&&logs[dayKey].status==='clean'){streak++;cursor.setDate(cursor.getDate()-1);dayKey=cursor.toLocaleDateString('en-CA');}
+            const now=new Date(), monthStart=new Date(now.getFullYear(),now.getMonth(),1), monthEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+            const monthDates=dates.filter(d=>d>=monthStart.toLocaleDateString('en-CA')&&d<=monthEnd.toLocaleDateString('en-CA'));
+            const monthClean=monthDates.filter(d=>logs[d].status==='clean').length;
+            const last7=dates.filter(d=>{const dt=new Date(d+'T00:00:00');return (now-dt)/86400000<7 && (now-dt)>=0;});
+            document.getElementById('anaStreak').textContent=streak+' দিন';
+            document.getElementById('anaClean').textContent=totalClean+' দিন';
+            document.getElementById('anaWeekly').textContent=last7.length?Math.round(last7.filter(d=>logs[d].status==='clean').length/7*100)+'%':'0%';
+            document.getElementById('anaMonthly').textContent=monthDates.length?Math.round(monthClean/monthEnd.getDate()*100)+'%':'0%';
+            const grid=document.getElementById('analyticsCalendarGrid');grid.innerHTML='';
+            const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),first=new Date(y,m,1),last=new Date(y,m+1,0);
+            document.getElementById('calendarMonthLabel').textContent=calendarCursor.toLocaleDateString('bn-BD',{month:'long',year:'numeric'});
+            for(let pad=0;pad<first.getDay();pad++){const blank=document.createElement('div');grid.appendChild(blank);}
+            for(let n=1;n<=last.getDate();n++){
+              const d=new Date(y,m,n),key=d.toLocaleDateString('en-CA'),entry=logs[key],box=document.createElement('button');
+              box.type='button';box.className='min-h-12 p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all text-xs';
+              box.className+=entry?(entry.status==='clean'?' bg-emerald-500/20 border-emerald-500/40 text-emerald-300':' bg-rose-500/20 border-rose-500/40 text-rose-300'):' bg-slate-800/40 border-slate-800 text-slate-500';
+              if(key===new Date().toLocaleDateString('en-CA'))box.className+=' ring-1 ring-brand-400';
+              box.innerHTML='<span>'+n+'</span><span class="text-[10px]">'+(entry?(entry.status==='clean'?'✓':'×'):'·')+'</span>';
+              box.title=entry?(entry.status==='clean'?'Clean Day':'Relapsed Day'):'কোনো রিপোর্ট নেই';
+              box.onclick=()=>{if(currentRole==='client'){document.getElementById('journalDate').value=key;loadJournalDataForDate(key);switchTab('journal');}else{const sel=document.getElementById('sisterDateSelect');if(sel){sel.value=key;loadBrotherEntryForSister(key);}}};
+              grid.appendChild(box);
+            }
+        }
+
+        function updateGlobalStats() {
+            const logs = getJournalLogs();
+            const dates = Object.keys(logs).sort();
+
+            let cleanCount = 0;
+            let currentStreak = 0;
+
+            dates.forEach(d => { if (logs[d].status === 'clean') cleanCount++; });
+
+            let cursor = new Date(); cursor.setHours(0, 0, 0, 0);
+            let key = cursor.toLocaleDateString('en-CA');
+            if (!logs[key]) { cursor.setDate(cursor.getDate() - 1); key = cursor.toLocaleDateString('en-CA'); }
+            while (logs[key] && logs[key].status === 'clean') { currentStreak++; cursor.setDate(cursor.getDate() - 1); key = cursor.toLocaleDateString('en-CA'); }
+
+            document.getElementById('headClean').textContent = cleanCount;
+            document.getElementById('headStreak').textContent = `${currentStreak} দিন`;
+        }
+
+        let calendarCursor=new Date();
+        async function loadPartnerPanel(){
+          const {data:invite,error}=await supabaseClient.from('partner_profiles').select('invite_code').eq('user_id',currentSession.user.id).maybeSingle();
+          document.getElementById('partnerInviteCode').textContent=error?'কোড লোড হয়নি':(invite?.invite_code||'কোড নেই');
+          const {data:links}=await supabaseClient.from('partner_clients').select('client_id').eq('partner_id',currentSession.user.id);
+          const ids=(links||[]).map(x=>x.client_id);
+          const select=document.getElementById('partnerClientSelect');select.innerHTML='<option value="">ক্লায়েন্ট নির্বাচন করুন</option>';
+          if(!ids.length){document.getElementById('partnerClientList').textContent='এখনো কোনো ক্লায়েন্ট যুক্ত হয়নি।';return;}
+          const {data:profiles}=await supabaseClient.from('profiles').select('id,full_name').in('id',ids);
+          (profiles||[]).forEach(p=>{const op=document.createElement('option');op.value=p.id;op.textContent=p.full_name||'নাম দেওয়া হয়নি';select.appendChild(op);});
+          document.getElementById('partnerClientList').innerHTML=(profiles||[]).map(p=>'<div class="py-1 border-b border-slate-700">'+escapeHtml(p.full_name||'নাম দেওয়া হয়নি')+'</div>').join('');
+          if(profiles?.length){select.value=profiles[0].id;filterPartnerClient(select.value);}
+        }
+        
+        function filterPartnerClient(clientId){
+          const filtered=(window.cloudReportRows||[]).filter(r=>r.client_id===clientId);
+          window.partnerFilteredRows=filtered;
+          const logs={};
+          filtered.forEach(r=>{logs[r.report_date]={date:r.report_date,status:r.status,block1:r.block1,block2:r.block2,block3:r.block3,block4:r.block4,block5:r.block5,triggerPoint:r.trigger_point,habitSun:r.habit_sun,habitExer:r.habit_exercise,habitDiet:r.habit_diet,sisterEval:r.report_reviews?.length?{notes:r.report_reviews[r.report_reviews.length-1].comment}:null};});
+          localStorage.setItem(STORAGE_JOURNAL,JSON.stringify(logs));populateSisterDateSelect();
+          loadPartnerClientRoutine(clientId);
+        }
+        
+        async function loadPartnerClientRoutine(clientId){
+          if(!clientId)return;
+          const {data:routines}=await supabaseClient.from('routines').select('id').eq('owner_id',clientId).limit(1);
+          if(!routines?.length){renderSisterRoutineInspection([]);return;}
+          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,end_time,time_label,category,sort_order').eq('routine_id',routines[0].id).order('sort_order');
+          renderSisterRoutineInspection((items||[]).map(x=>({time:x.time_label||[x.start_time,x.end_time].filter(Boolean).join(' - '),title:x.title,type:x.category||'ব্যক্তিগত'})));
+        }
+        
+        function copyPartnerCode(){const code=document.getElementById('partnerInviteCode').textContent;if(code&&code!=='কোড নেই'&&code!=='লোড হচ্ছে…')navigator.clipboard?.writeText(code).then(()=>showToast('Invite Code কপি হয়েছে।'));}
+        function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+        
+        async function loadCloudRoutine(){
+          if(!currentSession)return;
+          const {data:rows,error}=await supabaseClient.from('routines').select('id').eq('owner_id',currentSession.user.id).limit(1);
+          if(error)return;
+          let routineId=rows?.[0]?.id;
+          if(!routineId){const made=await supabaseClient.from('routines').insert({owner_id:currentSession.user.id,title:'আমার দৈনিক রুটিন'}).select('id').single();if(made.error)return;routineId=made.data.id;}
+          window.activeRoutineId=routineId;
+          const {data:items}=await supabaseClient.from('routine_items').select('title,start_time,end_time,time_label,category,sort_order').eq('routine_id',routineId).order('sort_order');
+          if(items?.length){localStorage.setItem(STORAGE_ROUTINE,JSON.stringify(items.map(x=>({time:x.time_label||[x.start_time,x.end_time].filter(Boolean).join(' - '),title:x.title,type:x.category||'ব্যক্তিগত'}))));}
+          renderRoutineTable();
+        }
+        
+        async function persistCloudRoutine(list){
+          if(!window.activeRoutineId)return;
+          const {error:delError}=await supabaseClient.from('routine_items').delete().eq('routine_id',window.activeRoutineId);
+          if(delError){showToast('রুটিন আপডেট হয়নি: '+delError.message);return;}
+          if(list.length){const rows=list.map((x,i)=>{const match=String(x.time||'').match(/(\d{1,2}:\d{2})\s*(?:-|–|to)\s*(\d{1,2}:\d{2})/i);return {routine_id:window.activeRoutineId,title:x.title,time_label:x.time||'',category:x.type||'ব্যক্তিগত',start_time:match?match[1]:null,end_time:match?match[2]:null,sort_order:i};});const {error}=await supabaseClient.from('routine_items').insert(rows);if(error){showToast('রুটিন সেভ হয়নি: '+error.message);return;}}
+        }
+        
+        function changeCalendarMonth(delta){calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+delta,1);renderAnalytics();}
+        function showToast(msg) {
+            const toast = document.getElementById('toastMessage');
+            document.getElementById('toastText').textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>
