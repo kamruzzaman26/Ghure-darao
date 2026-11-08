@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ঘুরে দাঁড়াও - প্রফেশনাল রিকভারি ও রুটিন ড্যাশবোর্ড</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -19,20 +20,12 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                            900: '#0c4a6e',
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8',
+                            500: '#0284c7', 600: '#0369a1', 700: '#075985', 800: '#0c4a6e', 900: '#0c4a6e', 950: '#082f49',
                         },
                         partner: {
-                            50: '#fdf4ff',
-                            100: '#fae8ff',
-                            500: '#a855f7',
-                            600: '#9333ea',
-                            700: '#7e22ce',
-                            900: '#581c87',
+                            50: '#fdf4ff', 100: '#fae8ff', 200: '#e9d5ff', 300: '#d8b4fe', 400: '#c084fc',
+                            500: '#a855f7', 600: '#9333ea', 700: '#7e22ce', 800: '#6b21a8', 900: '#581c87', 950: '#3b0764',
                         }
                     },
                     fontFamily: {
@@ -48,55 +41,216 @@
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* ===== Auth screen ===== */
+        #loginScreen { --accent:#0ea5e9; --accent2:#6366f1; --accent-soft:rgba(14,165,233,.18); }
+        .auth-blob { position:absolute; border-radius:9999px; filter:blur(90px); opacity:.35; pointer-events:none; }
+        .auth-blob-1 { width:420px; height:420px; top:-120px; left:-100px; background:var(--accent); transition:background .4s; }
+        .auth-blob-2 { width:380px; height:380px; bottom:-140px; right:-80px; background:var(--accent2); transition:background .4s; }
+        .auth-feature-icon { width:44px; height:44px; flex-shrink:0; border-radius:14px; background:rgba(148,163,184,.1); border:1px solid rgba(148,163,184,.15); display:flex; align-items:center; justify-content:center; font-size:18px; }
+
+        .role-card { text-align:left; padding:12px 14px; border-radius:14px; border:1.5px solid #334155; background:#1e293b; color:#cbd5e1; transition:all .2s; cursor:pointer; }
+        .role-card:hover { border-color:#475569; }
+        .role-card[data-auth-role=client] { --rc:#0ea5e9; --rc-soft:rgba(14,165,233,.12); }
+        .role-card[data-auth-role=partner] { --rc:#a855f7; --rc-soft:rgba(168,85,247,.12); }
+        .role-card[aria-pressed=true] { border-color:var(--rc); background:var(--rc-soft); color:#fff; box-shadow:0 0 0 3px var(--rc-soft); }
+        .role-icon { display:inline-flex; width:30px; height:30px; border-radius:10px; align-items:center; justify-content:center; background:#0f172a; color:#94a3b8; margin-bottom:6px; font-size:13px; }
+        .role-card[aria-pressed=true] .role-icon { background:var(--rc); color:#fff; }
+
+        .auth-tab { padding:9px 8px; border-radius:10px; font-weight:700; color:#94a3b8; transition:all .2s; }
+        .auth-tab[aria-selected=true] { background:var(--accent); color:#fff; box-shadow:0 2px 10px var(--accent-soft); }
+
+        .auth-label { display:block; font-size:12px; font-weight:600; color:#cbd5e1; margin-bottom:6px; }
+        .auth-field { position:relative; }
+        .auth-field-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; font-size:14px; pointer-events:none; }
+        .auth-input { width:100%; padding:12px 14px 12px 40px; border-radius:12px; background:#1e293b; border:1.5px solid #334155; color:#fff; font-size:14px; outline:none; transition:border-color .15s, box-shadow .15s; }
+        .auth-input::placeholder { color:#64748b; }
+        .auth-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+        .auth-input.is-invalid { border-color:#f43f5e; box-shadow:0 0 0 3px rgba(244,63,94,.15); }
+        .pw-toggle { position:absolute; right:6px; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:10px; color:#94a3b8; }
+        .pw-toggle:hover { color:#fff; background:rgba(148,163,184,.12); }
+        .field-error { font-size:11px; color:#fb7185; margin-top:5px; }
+        .auth-link { color:var(--accent); }
+        .auth-link:hover { filter:brightness(1.2); text-decoration:underline; }
+
+        .auth-submit { width:100%; padding:13px; border-radius:12px; color:#fff; font-weight:700; font-size:15px; background:linear-gradient(90deg,var(--accent),var(--accent2)); box-shadow:0 8px 24px -8px var(--accent); transition:transform .15s, filter .15s, opacity .15s; }
+        .auth-submit:hover { filter:brightness(1.1); }
+        .auth-submit:active { transform:scale(.99); }
+        .auth-submit:disabled { opacity:.65; cursor:wait; }
+
+        .pw-seg { flex:1; height:4px; border-radius:4px; background:#334155; transition:background .2s; }
+        .msg-info    { background:rgba(51,65,85,.5);   border-color:#475569;               color:#cbd5e1; }
+        .msg-success { background:rgba(16,185,129,.1); border-color:rgba(16,185,129,.4);   color:#6ee7b7; }
+        .msg-error   { background:rgba(244,63,94,.1);  border-color:rgba(244,63,94,.4);    color:#fda4af; }
+
+        @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
     </style>
 </head>
 <body class="h-full text-slate-100 antialiased flex flex-col bg-slate-950">
 
     <!-- Toast Notification -->
-    <div id="toastMessage" class="hidden fixed bottom-6 right-6 z-50 bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+    <div id="toastMessage" class="hidden fixed top-6 right-6 z-50 bg-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all">
+        <i id="toastIcon" class="fa-solid fa-bell text-brand-400 text-lg"></i>
         <span id="toastText" class="text-sm font-medium">তথ্য সেভ হয়েছে!</span>
     </div>
 
-    <!-- 1. LOGIN SCREEN CONTAINER -->
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <div class="max-w-md w-full bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl space-y-6">
-            <div class="text-center space-y-2">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/10 text-brand-500 border border-brand-500/20 mb-2">
-                    <i class="fa-solid fa-compass text-3xl"></i>
+    <!-- 1. AUTH SCREEN -->
+    <div id="loginScreen" class="min-h-screen w-full bg-slate-950 relative overflow-hidden">
+      <div class="auth-blob auth-blob-1" aria-hidden="true"></div>
+      <div class="auth-blob auth-blob-2" aria-hidden="true"></div>
+
+      <div class="relative max-w-6xl mx-auto min-h-screen grid lg:grid-cols-2 gap-10 items-center px-4 py-8 sm:px-8">
+
+        <!-- Brand panel (desktop) -->
+        <aside class="hidden lg:flex flex-col gap-8 pr-6">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/30"><i class="fa-solid fa-compass text-3xl text-white"></i></div>
+            <div><h1 class="text-4xl font-bold text-white leading-tight">ঘুরে দাঁড়াও</h1><p class="text-slate-400 text-sm mt-1">আসক্তি মুক্তি, দৈনিক রুটিন ও অ্যাকাউন্টেবিলিটি পোর্টাল</p></div>
+          </div>
+          <ul class="space-y-4">
+            <li class="flex gap-4 items-start"><span class="auth-feature-icon text-sky-400"><i class="fa-solid fa-pen-to-square"></i></span><div><p class="font-semibold text-white">দৈনিক ডায়েরি ও ট্র্যাকার</p><p class="text-sm text-slate-400">প্রতিদিনের রিপোর্ট, অভ্যাস ও ট্রিগার এক জায়গায় লিখে রাখুন।</p></div></li>
+            <li class="flex gap-4 items-start"><span class="auth-feature-icon text-purple-400"><i class="fa-solid fa-user-shield"></i></span><div><p class="font-semibold text-white">পার্টনারের সহযোগিতা</p><p class="text-sm text-slate-400">বিশ্বস্ত পার্টনার রিপোর্ট দেখে মন্তব্য ও দিকনির্দেশনা দেন।</p></div></li>
+            <li class="flex gap-4 items-start"><span class="auth-feature-icon text-amber-400"><i class="fa-solid fa-stopwatch"></i></span><div><p class="font-semibold text-white">ফোকাস ও টু-ডু লিস্ট</p><p class="text-sm text-slate-400">সারাদিনের কাজ ও পোমোডোরো টাইমার দিয়ে প্রোডাক্টিভিটি বাড়ান।</p></div></li>
+          </ul>
+          <p class="text-xs text-slate-500 flex items-center gap-2"><i class="fa-solid fa-lock"></i> আপনার রিপোর্ট শুধু আপনার যুক্ত পার্টনারের সাথেই শেয়ার হয়।</p>
+        </aside>
+
+        <!-- Auth card -->
+        <main class="w-full max-w-md mx-auto lg:max-w-lg">
+          <!-- Mobile brand -->
+          <div class="lg:hidden text-center mb-5">
+            <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 items-center justify-center shadow-lg shadow-brand-500/30 mb-3"><i class="fa-solid fa-compass text-2xl text-white"></i></div>
+            <h1 class="text-2xl font-bold text-white">ঘুরে দাঁড়াও</h1>
+            <p class="text-xs text-slate-400 mt-1">নিরাপদ ব্যক্তিগত রিকভারি ও রুটিন ব্যবস্থাপনা</p>
+          </div>
+
+          <div class="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8">
+
+            <!-- ===== VIEW: main (login / register) ===== -->
+            <div id="authMain" class="space-y-5">
+              <div>
+                <h2 id="authTitle" class="text-xl font-bold text-white">স্বাগতম, ফিরে এসেছেন</h2>
+                <p id="authSubtitle" class="text-sm text-slate-400 mt-1"></p>
+              </div>
+
+              <!-- Role selection -->
+              <div>
+                <p class="text-xs font-semibold text-slate-400 mb-2">আপনি কোন ভূমিকায়?</p>
+                <div class="grid grid-cols-2 gap-3" role="group" aria-label="ভূমিকা নির্বাচন">
+                  <button type="button" id="roleBtnClient" data-auth-role="client" aria-pressed="true" class="role-card">
+                    <span class="role-icon"><i class="fa-solid fa-user"></i></span>
+                    <span class="block font-bold text-sm">ক্লায়েন্ট</span>
+                    <span class="block text-[11px] text-slate-400 mt-0.5 leading-snug">নিজের ডায়েরি ও রুটিন</span>
+                  </button>
+                  <button type="button" id="roleBtnPartner" data-auth-role="partner" aria-pressed="false" class="role-card">
+                    <span class="role-icon"><i class="fa-solid fa-user-shield"></i></span>
+                    <span class="block font-bold text-sm">পার্টনার</span>
+                    <span class="block text-[11px] text-slate-400 mt-0.5 leading-snug">ক্লায়েন্টকে সহযোগিতা</span>
+                  </button>
                 </div>
-                <h1 class="text-2xl font-bold tracking-wide text-white">ঘুরে দাঁড়াও পোর্টাল</h1>
-                <p class="text-xs text-slate-400">একাকীত্বের অন্ধকার থেকে আলোর পথে যাত্রার ব্লুপ্রিন্ট</p>
+              </div>
+
+              <!-- Login / Register tabs -->
+              <div class="grid grid-cols-2 rounded-xl bg-slate-800 p-1 text-sm" role="tablist">
+                <button type="button" id="authLoginTab" data-auth-mode="login" role="tab" aria-selected="true" class="auth-tab">লগইন</button>
+                <button type="button" id="authRegisterTab" data-auth-mode="register" role="tab" aria-selected="false" class="auth-tab">নতুন রেজিস্ট্রেশন</button>
+              </div>
+
+              <!-- Register info box -->
+              <div id="roleInfoBox" class="hidden rounded-xl border border-slate-700 bg-slate-800/60 p-3.5 text-xs text-slate-300 leading-relaxed"></div>
+
+              <!-- Form -->
+              <form id="authForm" onsubmit="handleAuth(event)" novalidate class="space-y-4">
+                <div id="authNameWrap" class="hidden">
+                  <label for="authFullName" class="auth-label">সম্পূর্ণ নাম</label>
+                  <div class="auth-field"><i class="fa-regular fa-user auth-field-icon"></i><input id="authFullName" type="text" autocomplete="name" class="auth-input" placeholder="আপনার নাম লিখুন"></div>
+                  <p data-err-for="authFullName" class="field-error hidden"></p>
+                </div>
+
+                <div>
+                  <label for="loginUsername" class="auth-label">ইমেইল</label>
+                  <div class="auth-field"><i class="fa-regular fa-envelope auth-field-icon"></i><input id="loginUsername" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" class="auth-input" placeholder="name@example.com"></div>
+                  <p data-err-for="loginUsername" class="field-error hidden"></p>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between">
+                    <label for="loginPassword" class="auth-label">পাসওয়ার্ড</label>
+                    <button id="forgotPasswordBtn" type="button" onclick="showAuthView('reset')" class="text-xs font-semibold auth-link mb-1.5">পাসওয়ার্ড ভুলে গেছেন?</button>
+                  </div>
+                  <div class="auth-field"><i class="fa-solid fa-lock auth-field-icon"></i><input id="loginPassword" type="password" minlength="8" autocomplete="current-password" class="auth-input pr-11" placeholder="কমপক্ষে ৮ অক্ষর"><button type="button" data-toggle-pw="loginPassword" class="pw-toggle" aria-label="পাসওয়ার্ড দেখান/লুকান"><i class="fa-regular fa-eye"></i></button></div>
+                  <p data-err-for="loginPassword" class="field-error hidden"></p>
+                  <div id="pwStrengthWrap" class="hidden mt-2">
+                    <div class="flex gap-1.5"><span class="pw-seg"></span><span class="pw-seg"></span><span class="pw-seg"></span><span class="pw-seg"></span></div>
+                    <p id="pwStrengthText" class="text-[11px] text-slate-400 mt-1">অক্ষর ও সংখ্যা মিলিয়ে ৮+ অক্ষরের পাসওয়ার্ড দিন।</p>
+                  </div>
+                </div>
+
+                <div id="authConfirmWrap" class="hidden">
+                  <label for="authConfirmPassword" class="auth-label">পাসওয়ার্ড নিশ্চিত করুন</label>
+                  <div class="auth-field"><i class="fa-solid fa-shield-halved auth-field-icon"></i><input id="authConfirmPassword" type="password" autocomplete="new-password" class="auth-input pr-11" placeholder="পাসওয়ার্ড আবার লিখুন"><button type="button" data-toggle-pw="authConfirmPassword" class="pw-toggle" aria-label="পাসওয়ার্ড দেখান/লুকান"><i class="fa-regular fa-eye"></i></button></div>
+                  <p data-err-for="authConfirmPassword" class="field-error hidden"></p>
+                </div>
+
+                <div id="inviteCodeWrap" class="hidden">
+                  <label for="inviteCode" class="auth-label">পার্টনার Invite Code</label>
+                  <div class="auth-field"><i class="fa-solid fa-ticket auth-field-icon"></i><input id="inviteCode" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" class="auth-input tracking-widest" placeholder="পার্টনারের দেওয়া কোড"></div>
+                  <p class="text-[11px] text-slate-500 mt-1">কোড না থাকলে আপনার পার্টনারকে তার ড্যাশবোর্ড থেকে কোড কপি করে দিতে বলুন।</p>
+                  <p data-err-for="inviteCode" class="field-error hidden"></p>
+                </div>
+
+                <button type="submit" id="authSubmitButton" class="auth-submit"><span id="authSubmitLabel">লগইন করুন</span></button>
+              </form>
+
+              <!-- Message box -->
+              <div id="authMessage" class="hidden rounded-xl border px-3.5 py-3 text-xs leading-relaxed flex gap-2.5 items-start" role="status" aria-live="polite">
+                <i id="authMessageIcon" class="fa-solid fa-circle-info mt-0.5"></i><span id="authMessageText"></span>
+              </div>
+              <button id="resendVerificationBtn" type="button" onclick="resendVerificationEmail()" class="hidden w-full text-xs font-semibold text-amber-300 hover:text-amber-200 underline">ভেরিফিকেশন ইমেইল আবার পাঠান</button>
             </div>
 
-            <div class="space-y-4">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">লগইন টাইপ নির্বাচন করুন:</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <button type="button" id="roleBtnClient" onclick="selectRole('client')" class="py-3 px-4 rounded-xl border border-brand-500 bg-brand-500/10 text-brand-400 font-bold text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-user"></i> ক্লাইন্ট (ভাই)
-                    </button>
-                    <button type="button" id="roleBtnPartner" onclick="selectRole('partner')" class="py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-user-shield"></i> পার্টনার (বোন)
-                    </button>
+            <!-- ===== VIEW: password reset request ===== -->
+            <div id="passwordResetRequestPanel" class="hidden space-y-5">
+              <button type="button" onclick="showAuthView('main')" class="text-xs font-semibold auth-link flex items-center gap-1.5"><i class="fa-solid fa-arrow-left"></i> লগইনে ফিরে যান</button>
+              <div>
+                <h2 class="text-xl font-bold text-white">পাসওয়ার্ড রিসেট</h2>
+                <p class="text-sm text-slate-400 mt-1">অ্যাকাউন্টের ইমেইল দিন। পাসওয়ার্ড পরিবর্তনের নিরাপদ লিংক ইমেইলে পাঠানো হবে।</p>
+              </div>
+              <form onsubmit="resetPassword(event)" novalidate class="space-y-4">
+                <div>
+                  <label for="resetEmail" class="auth-label">ইমেইল</label>
+                  <div class="auth-field"><i class="fa-regular fa-envelope auth-field-icon"></i><input id="resetEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" class="auth-input" placeholder="name@example.com"></div>
                 </div>
-
-                <div class="space-y-3 pt-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">ইউজারনেম (Username):</label>
-                        <input type="text" id="loginUsername" placeholder="brother অথবা sister" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">পাসওয়ার্ড (Password):</label>
-                        <input type="password" id="loginPassword" placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none text-sm">
-                    </div>
-                </div>
-
-                <button type="button" onclick="handleLogin()" class="w-full py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm mt-2">
-                    <i class="fa-solid fa-right-to-bracket"></i> ড্যাশবোর্ডে প্রবেশ করুন
-                </button>
-                <p class="text-center text-xs text-slate-500 pt-2">ডেমো অ্যাকাউন্ট: <b>brother</b> (ভাই) / <b>sister</b> (বোন) [পাসওয়ার্ড: 123456]</p>
+                <button type="submit" id="sendResetEmailBtn" class="auth-submit">রিসেট লিংক পাঠান</button>
+              </form>
+              <div id="resetMessage" class="hidden rounded-xl border px-3.5 py-3 text-xs leading-relaxed flex gap-2.5 items-start" role="status" aria-live="polite"><i class="fa-solid fa-circle-info mt-0.5"></i><span id="resetMessageText"></span></div>
             </div>
-        </div>
+
+            <!-- ===== VIEW: set new password ===== -->
+            <div id="passwordUpdatePanel" class="hidden space-y-5">
+              <div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-xl mb-3"><i class="fa-solid fa-key"></i></div>
+                <h2 class="text-xl font-bold text-white">নতুন পাসওয়ার্ড সেট করুন</h2>
+                <p class="text-sm text-slate-400 mt-1">ইমেইলের লিংক যাচাই হয়েছে। এখন নতুন পাসওয়ার্ড দিন।</p>
+              </div>
+              <form onsubmit="updateNewPassword(event)" novalidate class="space-y-4">
+                <div>
+                  <label for="newPassword" class="auth-label">নতুন পাসওয়ার্ড</label>
+                  <div class="auth-field"><i class="fa-solid fa-lock auth-field-icon"></i><input id="newPassword" type="password" minlength="8" autocomplete="new-password" class="auth-input pr-11" placeholder="কমপক্ষে ৮ অক্ষর"><button type="button" data-toggle-pw="newPassword" class="pw-toggle" aria-label="পাসওয়ার্ড দেখান/লুকান"><i class="fa-regular fa-eye"></i></button></div>
+                </div>
+                <div>
+                  <label for="confirmNewPassword" class="auth-label">পাসওয়ার্ড নিশ্চিত করুন</label>
+                  <div class="auth-field"><i class="fa-solid fa-shield-halved auth-field-icon"></i><input id="confirmNewPassword" type="password" minlength="8" autocomplete="new-password" class="auth-input pr-11" placeholder="পাসওয়ার্ড আবার লিখুন"><button type="button" data-toggle-pw="confirmNewPassword" class="pw-toggle" aria-label="পাসওয়ার্ড দেখান/লুকান"><i class="fa-regular fa-eye"></i></button></div>
+                </div>
+                <button type="submit" id="updatePasswordBtn" class="auth-submit">নতুন পাসওয়ার্ড সেভ করুন</button>
+              </form>
+              <div id="updateMessage" class="hidden rounded-xl border px-3.5 py-3 text-xs leading-relaxed flex gap-2.5 items-start" role="status" aria-live="polite"><i class="fa-solid fa-circle-info mt-0.5"></i><span id="updateMessageText"></span></div>
+            </div>
+
+          </div>
+          <p class="text-center text-[11px] text-slate-600 mt-4">© ঘুরে দাঁড়াও · নিরাপদ ও ব্যক্তিগত</p>
+        </main>
+      </div>
     </div>
 
     <!-- 2. MAIN APP DASHBOARD -->
@@ -116,7 +270,7 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <div class="hidden md:flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+                    <div id="headStats" class="hidden md:flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
                         <span class="text-slate-400">ক্লিন ডে: <b id="headClean" class="text-emerald-400">0</b></span>
                         <span class="text-slate-600">|</span>
                         <span class="text-slate-400">স্ট্রিক: <b id="headStreak" class="text-amber-400">0 দিন</b></span>
@@ -139,7 +293,7 @@
         <!-- Dashboard Body Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
             
-            <!-- CLIENT VIEW 1: DAILY TRACKER & 5-BLOCK JOURNAL (ONLY FOR BROTHER) -->
+            <!-- CLIENT VIEW 1: DAILY TRACKER & 5-BLOCK JOURNAL -->
             <section id="secBrotherJournal" class="space-y-6 hidden">
                 <form id="journalForm" onsubmit="saveJournalEntry(event)" class="space-y-6">
                     
@@ -221,19 +375,65 @@
 
                     <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
                         <i class="fa-solid fa-paper-plane"></i>
-                        <span>আজকের সারাদিনের রিপোর্ট বোনের কাছে জমা দিন</span>
+                        <span>আজকের সারাদিনের রিপোর্ট পার্টনারের কাছে জমা দিন</span>
                     </button>
+                    <div id="partnerFeedbackPanel" class="hidden bg-partner-500/10 border border-partner-500/30 rounded-2xl p-5">
+                      <h3 class="font-bold text-partner-300 mb-2"><i class="fa-solid fa-comment-dots mr-2"></i>আপনার পার্টনারের মন্তব্য</h3>
+                      <p id="partnerFeedbackText" class="text-sm text-slate-200 whitespace-pre-wrap"></p>
+                    </div>
                 </form>
             </section>
 
-            <!-- CLIENT VIEW 2: ROUTINE PLANNER (EDITABLE BY BROTHER) -->
+            <!-- CLIENT VIEW 1.5: FOCUS & TASKS (POMODORO + TO-DO) -->
+            <section id="secFocus" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Pomodoro Timer -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg flex flex-col items-center justify-center text-center">
+                        <h2 class="text-xl font-bold mb-2 text-sky-400 flex items-center gap-2"><i class="fa-solid fa-stopwatch"></i> পোমোডোরো টাইমার</h2>
+                        <p class="text-xs text-slate-400 mb-6">পড়ালেখায় ফোকাস বাড়াতে ২৫ মিনিট পড়ুন, ৫ মিনিট ব্রেক নিন।</p>
+                        
+                        <div class="text-6xl md:text-7xl font-mono font-bold text-white mb-8 tracking-wider" id="timer">25:00</div>
+                        
+                        <div class="flex flex-wrap justify-center gap-3">
+                            <button onclick="startTimer()" class="bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-lg flex items-center gap-2">
+                                <i class="fa-solid fa-play"></i> শুরু
+                            </button>
+                            <button onclick="pauseTimer()" class="bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-lg flex items-center gap-2">
+                                <i class="fa-solid fa-pause"></i> বিরতি
+                            </button>
+                            <button onclick="resetTimer()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition shadow-lg flex items-center gap-2">
+                                <i class="fa-solid fa-rotate-right"></i> রিসেট
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- To-Do List -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg flex flex-col h-[400px]">
+                        <h2 class="text-xl font-bold mb-2 text-purple-400 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> সারাদিনের কর্ম (To-Do)</h2>
+                        <p class="text-xs text-slate-400 mb-4">আজকের ছোট ছোট লক্ষ্যগুলো পূরণ করে টিক দিন।</p>
+
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="task-input" placeholder="নতুন কাজ যুক্ত করুন..." class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:ring-2 focus:ring-purple-500 outline-none text-sm">
+                            <button onclick="addTask()" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition">যুক্ত</button>
+                        </div>
+                        
+                        <ul id="task-list" class="space-y-3 overflow-y-auto pr-2 flex-grow scrollbar-thin">
+                            <!-- Tasks injected here -->
+                        </ul>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- CLIENT VIEW 2: ROUTINE PLANNER -->
             <section id="secBrotherRoutine" class="space-y-6 hidden">
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                         <div>
                             <h2 class="font-bold text-lg text-white flex items-center gap-2">
                                 <i class="fa-solid fa-calendar-check text-brand-400"></i>
-                                <span>আমার দৈনিক ও মাদ্রাসার ক্লাস রুটিন এডিটর</span>
+                                <span>আমার দৈনিক ক্লাস ও রুটিন এডিটর</span>
                             </h2>
                             <p class="text-xs text-slate-400">আপনার নিজস্ব রুটিন প্রয়োজন অনুযায়ী সাজিয়ে নিন</p>
                         </div>
@@ -260,7 +460,7 @@
                 </div>
             </section>
 
-            <!-- COMMON ANALYTICS VIEW (LUSTMANAGER STYLE) -->
+            <!-- COMMON ANALYTICS VIEW -->
             <section id="secAnalytics" class="space-y-6 hidden">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
@@ -286,16 +486,15 @@
                 </div>
 
                 <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 shadow-lg">
-                    <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-days text-brand-400"></i> বিগত ২৮ দিনের ট্র্যাকিং ক্যালেন্ডার (LustManager Style)
-                    </h3>
+                    <div class="flex items-center justify-between gap-3 flex-wrap"><h3 class="font-bold text-sm text-slate-200 flex items-center gap-2"><i class="fa-solid fa-calendar-days text-brand-400"></i> মাসিক ট্র্যাকিং ক্যালেন্ডার</h3><div class="flex items-center gap-2"><button onclick="changeCalendarMonth(-1)" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700">‹</button><strong id="calendarMonthLabel" class="text-sm text-white min-w-28 text-center"></strong><button onclick="changeCalendarMonth(1)" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700">›</button></div></div>
+                    <div class="grid grid-cols-7 gap-2 text-center text-[11px] text-slate-500"><span>রবি</span><span>সোম</span><span>মঙ্গল</span><span>বুধ</span><span>বৃহঃ</span><span>শুক্র</span><span>শনি</span></div>
                     <div id="analyticsCalendarGrid" class="grid grid-cols-7 gap-2 text-center text-xs">
                         <!-- Populated JS -->
                     </div>
                 </div>
             </section>
 
-            <!-- PARTNER VIEW: SISTER'S FULL BROTHER MONITORING & EVALUATION DASHBOARD -->
+            <!-- PARTNER VIEW: MONITORING & EVALUATION DASHBOARD -->
             <section id="secSisterDashboard" class="space-y-6 hidden">
                 <div class="bg-gradient-to-br from-slate-900 via-partner-950/30 to-slate-900 p-6 rounded-2xl border border-partner-700/40 shadow-xl space-y-6">
                     <div class="flex items-center gap-3 border-b border-partner-800/60 pb-4">
@@ -303,29 +502,35 @@
                             <i class="fa-solid fa-user-shield"></i>
                         </div>
                         <div>
-                            <h2 class="text-lg font-bold text-white">বোনের অ্যাকাউন্টবিলিটি ও মূল্যায়ন প্যানেল</h2>
-                            <p class="text-xs text-partner-300">ভাইয়ের দৈনিক রিপোর্ট, ৫-ব্লকের ডায়েরি ও রুটিন দেখার বিশেষ ড্যাশবোর্ড</p>
+                            <h2 class="text-lg font-bold text-white">পার্টনার অ্যাকাউন্টবিলিটি ও মূল্যায়ন প্যানেল</h2>
+                            <p class="text-xs text-partner-300">ক্লায়েন্টের দৈনিক রিপোর্ট, ডায়েরি ও রুটিন দেখার বিশেষ ড্যাশবোর্ড</p>
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div class="bg-slate-800/80 rounded-xl p-4 border border-partner-700/40"><p class="text-xs text-slate-400 mb-1">আপনার Partner Invite Code</p><div class="flex items-center gap-2"><strong id="partnerInviteCode" class="text-xl tracking-widest text-white">লোড হচ্ছে…</strong><button onclick="copyPartnerCode()" class="px-3 py-2 rounded-lg bg-partner-700 hover:bg-partner-600 transition text-white text-xs">কপি</button></div><p class="text-[11px] text-slate-500 mt-2">এই কোডটি ক্লায়েন্টকে দিন।</p></div>
+                      <div class="bg-slate-800/80 rounded-xl p-4 border border-slate-700"><p class="text-xs text-slate-400 mb-2">আপনার যুক্ত ক্লায়েন্ট</p><div id="partnerClientList" class="text-sm text-slate-200">লোড হচ্ছে…</div></div>
+                    </div>
+                    <div class="mb-3"><label class="block text-xs font-bold text-slate-300 mb-2">ক্লায়েন্ট নির্বাচন করুন</label><select id="partnerClientSelect" onchange="filterPartnerClient(this.value)" class="w-full md:w-1/2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-sm focus:ring-2 focus:ring-partner-500 outline-none"><option value="">ক্লায়েন্ট নির্বাচন করুন</option></select></div>
+                    
                     <!-- Date Selection for Evaluation -->
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 mb-2">পর্যালোচনা করার জন্য ভাইয়ের রিপোর্ট বেছে নিন:</label>
-                            <select id="sisterDateSelect" onchange="loadBrotherEntryForSister(this.value)" class="w-full md:w-1/2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-semibold text-sm outline-none">
+                            <label class="block text-xs font-bold text-slate-300 mb-2">পর্যালোচনা করার জন্য ক্লায়েন্টের রিপোর্ট বেছে নিন:</label>
+                            <select id="sisterDateSelect" onchange="loadBrotherEntryForSister(this.value)" class="w-full md:w-1/2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white font-semibold text-sm outline-none focus:ring-2 focus:ring-partner-500">
                                 <!-- Options -->
                             </select>
                         </div>
 
                         <!-- Brother Full Live Report View (Read Only) -->
                         <div id="brotherReportCard" class="bg-slate-800/90 p-5 rounded-2xl border border-slate-700 space-y-4 text-xs text-slate-300 shadow-inner">
-                            <p class="italic text-slate-500">উপরে তারিখ বেছে নিলে ভাইয়ের সম্পূর্ণ রিপোর্ট এখানে দেখা যাবে...</p>
+                            <p class="italic text-slate-500">উপরে তারিখ বেছে নিলে ক্লায়েন্টের সম্পূর্ণ রিপোর্ট এখানে দেখা যাবে...</p>
                         </div>
 
                         <!-- Brother's Routine Inspection Box (Read Only for Sister) -->
                         <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
                             <h3 class="font-bold text-sm text-brand-300 flex items-center gap-2">
-                                <i class="fa-solid fa-clock"></i> ভাইয়ের বর্তমান দৈনিক রুটিন (ভিউ মোড)
+                                <i class="fa-solid fa-clock"></i> ক্লায়েন্টের বর্তমান দৈনিক রুটিন (ভিউ মোড)
                             </h3>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-xs text-slate-300">
@@ -346,12 +551,12 @@
                         <!-- Sister Feedback Form -->
                         <div class="bg-slate-900 p-5 rounded-2xl border border-partner-800/50 space-y-4">
                             <h3 class="font-bold text-sm text-partner-300 flex items-center gap-2">
-                                <i class="fa-solid fa-heart"></i> বোনের অনুভূতি, মূল্যায়ন ও কমেন্ট সেভ করুন:
+                                <i class="fa-solid fa-heart"></i> পার্টনারের অনুভূতি, মূল্যায়ন ও কমেন্ট সেভ করুন:
                             </h3>
 
                             <div>
                                 <label class="block text-xs font-semibold text-slate-300 mb-1">সততা ও মেজাজ রেটিং (১-৫ স্টার):</label>
-                                <select id="sisterRating" class="w-full md:w-1/2 px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs outline-none">
+                                <select id="sisterRating" class="w-full md:w-1/2 px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs outline-none focus:ring-2 focus:ring-partner-500">
                                     <option value="5">⭐⭐⭐⭐⭐ অসাধারণ ও শতভাগ সৎ</option>
                                     <option value="4">⭐⭐⭐⭐ খুব ভালো প্রচেষ্টা</option>
                                     <option value="3">⭐⭐⭐ সন্তোষজনক (আরেকটু নজর দিন)</option>
@@ -361,12 +566,12 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">ভাইয়ের জন্য আপনার বার্তা ও উপদেশ:</label>
-                                <textarea id="sisterNotes" rows="3" placeholder="যেমন: তোমার সিদ্ধান্তটি খুব সুন্দর লেগেছে। কাল সময়মতো ঘুমাবে..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs outline-none"></textarea>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">ক্লায়েন্টের জন্য আপনার বার্তা ও উপদেশ:</label>
+                                <textarea id="sisterNotes" rows="3" placeholder="যেমন: তোমার সিদ্ধান্তটি খুব সুন্দর লেগেছে। কাল সময়মতো ঘুমাবে..." class="w-full p-3 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs outline-none focus:ring-2 focus:ring-partner-500"></textarea>
                             </div>
 
                             <button onclick="saveSisterFeedback()" class="w-full py-3.5 bg-partner-700 hover:bg-partner-600 text-white font-bold rounded-xl text-xs shadow-lg transition-all flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-check-circle"></i> বোনের মূল্যায়ন সেভ করুন
+                                <i class="fa-solid fa-check-circle"></i> মূল্যায়ন সেভ করুন ও পাঠিয়ে দিন
                             </button>
                         </div>
                     </div>
@@ -377,21 +582,21 @@
     </div>
 
     <!-- ROUTINE ADD MODAL -->
-    <div id="routineModal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full space-y-4">
+    <div id="routineModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 shadow-2xl p-6 rounded-2xl max-w-md w-full space-y-4">
             <h3 class="font-bold text-white text-base">রুটিনে নতুন কার্যক্রম যোগ করুন</h3>
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-400 mb-1">সময় (শুরু - শেষ):</label>
-                    <input type="text" id="rtTime" placeholder="যেমন: ০৭:৩০ - ০৮:১৫" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+                    <input type="text" id="rtTime" placeholder="যেমন: ০৭:৩০ - ০৮:১৫" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-slate-400 mb-1">কার্যক্রম / বিষয়:</label>
-                    <input type="text" id="rtTitle" placeholder="যেমন: সহীহু মুসলিম (শাইখ তানজিল)" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+                    <input type="text" id="rtTitle" placeholder="যেমন: ব্যক্তিগত পড়াশোনা" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-slate-400 mb-1">ধরণ:</label>
-                    <select id="rtType" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white">
+                    <select id="rtType" class="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:ring-2 focus:ring-brand-500 outline-none">
                         <option value="সালাত">সালাত / দোয়া</option>
                         <option value="পড়াশোনা">পড়াশোনা / ক্লাস</option>
                         <option value="দায়িত্ব">দায়িত্ব / কাজ</option>
@@ -401,439 +606,394 @@
                 </div>
             </div>
             <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeAddRoutineModal()" class="px-4 py-2 bg-slate-800 text-slate-300 text-xs rounded-lg">বাতিল</button>
-                <button onclick="saveRoutineItem()" class="px-4 py-2 bg-brand-600 text-white text-xs font-bold rounded-lg">সেভ করুন</button>
+                <button onclick="closeAddRoutineModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition">বাতিল</button>
+                <button onclick="saveRoutineItem()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-lg transition shadow-lg">সেভ করুন</button>
             </div>
         </div>
     </div>
 
     <!-- JavaScript Engine -->
     <script>
-        const STORAGE_JOURNAL = 'gd_journal_logs_v3';
-        const STORAGE_ROUTINE = 'gd_routine_plan_v3';
-        const STORAGE_USER = 'gd_current_user_v3';
+        const STORAGE_JOURNAL = 'gd_journal_logs_v4';
+        const STORAGE_ROUTINE = 'gd_routine_plan_v4';
+        const STORAGE_TASKS = 'gd_tasks_v4';
+        const STORAGE_USER = 'gd_current_user_v4';
 
         let currentRole = 'client';
+        let authMode = 'login';
+        let supabaseClient = null;
+        let currentSession = null;
+        const SUPABASE_URL = 'https://szloddnjvawmwuhkvkkz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable__X_-_94GrElRd4FJKMyzJg_azh1EMQE';
 
         const defaultRoutine = [
             { time: "০৪:০০ - ০৫:৩০", title: "ঘুম ও ফজর সালাত (দোয়া সহ)", type: "সালাত" },
-            { time: "০৫:৩০ - ০৭:৩০", title: "ঘুম ও মাদ্রাসার ক্লাসের প্রস্তুতি", type: "পড়াশোনা" },
-            { time: "০৭:৩০ - ১০:১৫", title: "মাদ্রাসার ক্লাস (১ম অংশ)", type: "পড়াশোনা" },
-            { time: "১০:১৫ - ১০:৩৫", title: "টিফিন টাইম", type: "খাওয়া" },
-            { time: "১০:৩৫ - ১২:৩৫", title: "মাদ্রাসার ক্লাস (২য় অংশ / আজমানে প্রোগ্রাম)", type: "দায়িত্ব" },
+            { time: "০৫:৩০ - ০৭:৩০", title: "পড়াশোনা ও প্রস্তুতি", type: "পড়াশোনা" },
+            { time: "০৭:৩০ - ১০:১৫", title: "ক্লাস / কাজ (১ম অংশ)", type: "দায়িত্ব" },
+            { time: "১০:১৫ - ১০:৩৫", title: "ব্রেক / টিফিন", type: "খাওয়া" },
+            { time: "১০:৩৫ - ১২:৩৫", title: "ক্লাস / কাজ (২য় অংশ)", type: "দায়িত্ব" },
             { time: "১২:৩৫ - ০১:০৫", title: "যোহরের সালাত", type: "সালাত" },
-            { time: "০১:১৫ - ০৩:৪০", title: "গোসল, খাওয়া ও বিশ্রাম", type: "খাওয়া" },
-            { time: "০৩:৪০ - ০৫:২০", title: "আছরের সালাত ও পড়া (আপুর সাথে শেয়ার)", type: "সালাত" },
+            { time: "০১:১৫ - ০৩:৪০", title: "খাওয়া ও বিশ্রাম", type: "খাওয়া" },
+            { time: "০৩:৪০ - ০৫:২০", title: "আছরের সালাত ও পড়া", type: "সালাত" },
             { time: "০৬:৩০ - ০৭:৩০", title: "মাগরিবের সালাত ও দোয়া", type: "সালাত" },
-            { time: "০৭:৩০ - ০৯:৩০", title: "কোচিং, ডিনার ও এশার সালাত", type: "পড়াশোনা" },
-            { time: "০৯:৩০ - ১১:০০", title: "ব্যক্তিগত পড়াশোনা", type: "পড়াশোনা" },
+            { time: "০৭:৩০ - ০৯:৩০", title: "ডিনার ও এশার সালাত", type: "পড়াশোনা" },
+            { time: "০৯:৩০ - ১১:০০", title: "ব্যক্তিগত কাজ / পড়াশোনা", type: "পড়াশোনা" },
             { time: "১১:০০ - ১২:০০", title: "রিপোর্ট জমা ও ঘুমের প্রস্তুতি", type: "দায়িত্ব" },
             { time: "১২:০০ - ০৪:০০", title: "রাতের ঘুম", type: "ঘুম" }
         ];
 
-        window.onload = function() {
-            initRoutine();
-            const user = localStorage.getItem(STORAGE_USER);
-            if (user) {
-                currentRole = user;
-                showDashboard();
+        // ============ AUTHENTICATION LOGIC ============
+        const ROLE_META = {
+            client: {
+                label: 'ক্লায়েন্ট', accent: '#0ea5e9', accent2: '#6366f1', soft: 'rgba(14,165,233,.18)',
+                loginSub: 'নিজের দৈনিক ডায়েরি, রুটিন ও অগ্রগতি দেখতে লগইন করুন।',
+                registerSub: 'ক্লায়েন্ট হিসেবে নতুন অ্যাকাউন্ট খুলুন।',
+                info: '<b class="text-white">ক্লায়েন্ট রেজিস্ট্রেশন তিন ধাপে:</b><br>১) পার্টনারের কাছ থেকে Invite Code নিন<br>২) নিচের ফর্ম পূরণ করে রেজিস্ট্রেশন করুন<br>৩) ইমেইল ভেরিফাই করে লগইন করুন'
+            },
+            partner: {
+                label: 'পার্টনার', accent: '#a855f7', accent2: '#d946ef', soft: 'rgba(168,85,247,.2)',
+                loginSub: 'যুক্ত ক্লায়েন্টের রিপোর্ট দেখতে ও মন্তব্য দিতে লগইন করুন।',
+                registerSub: 'পার্টনার হিসেবে নতুন অ্যাকাউন্ট খুলুন।',
+                info: '<b class="text-white">পার্টনার রেজিস্ট্রেশন:</b><br>রেজিস্ট্রেশন ও ইমেইল ভেরিফাইয়ের পর ড্যাশবোর্ডে আপনার নিজস্ব <b class="text-white">Invite Code</b> পাবেন। সেই কোড ক্লায়েন্টকে দিন—সে রেজিস্ট্রেশনের সময় কোডটি ব্যবহার করবে।'
             }
+        };
+        let authBusy = false;
+        let pendingVerify = false;
 
-            const today = new Date().toISOString().split('T')[0];
+        window.onload = async function() {
+            initRoutine();
+            initAuthUI();
+            const today = new Date().toLocaleDateString('en-CA');
             document.getElementById('journalDate').value = today;
             loadJournalDataForDate(today);
+
+            if (!window.supabase) { setAuthMessage('নিরাপদ সার্ভিস লোড হয়নি। ইন্টারনেট সংযোগ দেখে পেজ রিফ্রেশ করুন।', 'error'); return; }
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            const query = new URLSearchParams(window.location.search);
+            const hash = new URLSearchParams(window.location.hash.slice(1));
+            const authError = query.get('error_description') || hash.get('error_description');
+            if (authError) setAuthMessage('ইমেইল ভেরিফিকেশন সম্পন্ন হয়নি: ' + decodeURIComponent(authError.replace(/\+/g, ' ')), 'error');
+
+            supabaseClient.auth.onAuthStateChange((event, sessionNow) => {
+                if (event === 'PASSWORD_RECOVERY' && sessionNow) {
+                    currentSession = sessionNow;
+                    document.getElementById('mainDashboard').classList.add('hidden');
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    showAuthView('update');
+                }
+            });
+
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+            if (sessionError) setAuthMessage('সেশন যাচাই করা যায়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।', 'error');
+            currentSession = session;
+            const recoveryRequested = query.get('reset') === '1' || hash.get('type') === 'recovery';
+            if (recoveryRequested && session) {
+                showAuthView('update');
+            } else if (session) {
+                try { await enterAuthenticatedApp(); }
+                catch (err) { setAuthMessage('ড্যাশবোর্ড লোড করা যায়নি: ' + friendlyAuthError(err), 'error'); }
+            }
         };
 
-        function selectRole(role) {
-            currentRole = role;
-            const btnC = document.getElementById('roleBtnClient');
-            const btnP = document.getElementById('roleBtnPartner');
-            if (role === 'client') {
-                btnC.className = "py-3 px-4 rounded-xl border border-brand-500 bg-brand-500/10 text-brand-400 font-bold text-sm flex items-center justify-center gap-2";
-                btnP.className = "py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-sm flex items-center justify-center gap-2";
-            } else {
-                btnP.className = "py-3 px-4 rounded-xl border border-partner-500 bg-partner-500/10 text-partner-400 font-bold text-sm flex items-center justify-center gap-2";
-                btnC.className = "py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-sm flex items-center justify-center gap-2";
-            }
+        function initAuthUI() {
+            document.addEventListener('click', function(event) {
+                const roleButton = event.target.closest('[data-auth-role]');
+                if (roleButton) { event.preventDefault(); selectRole(roleButton.dataset.authRole); return; }
+                const modeButton = event.target.closest('[data-auth-mode]');
+                if (modeButton) { event.preventDefault(); setAuthMode(modeButton.dataset.authMode); return; }
+                const pwButton = event.target.closest('[data-toggle-pw]');
+                if (pwButton) {
+                    event.preventDefault();
+                    const input = document.getElementById(pwButton.dataset.togglePw);
+                    const show = input.type === 'password';
+                    input.type = show ? 'text' : 'password';
+                    pwButton.querySelector('i').className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+                }
+            });
+            document.getElementById('loginPassword').addEventListener('input', updatePasswordStrength);
+            ['authFullName', 'loginUsername', 'loginPassword', 'authConfirmPassword', 'inviteCode'].forEach(id => {
+                document.getElementById(id).addEventListener('input', () => clearFieldError(id));
+            });
+            renderAuthUI();
         }
 
-        function handleLogin() {
-            const u = document.getElementById('loginUsername').value.trim();
-            const p = document.getElementById('loginPassword').value.trim();
+        function renderAuthUI() {
+            const reg = authMode === 'register';
+            const isClient = currentRole === 'client';
+            const meta = ROLE_META[currentRole];
+            const ls = document.getElementById('loginScreen').style;
+            ls.setProperty('--accent', meta.accent);
+            ls.setProperty('--accent2', meta.accent2);
+            ls.setProperty('--accent-soft', meta.soft);
 
-            if (!u || !p) {
-                alert('অনুগ্রহ করে ইউজারনেম ও পাসওয়ার্ড লিখুন');
+            document.getElementById('roleBtnClient').setAttribute('aria-pressed', isClient);
+            document.getElementById('roleBtnPartner').setAttribute('aria-pressed', !isClient);
+            document.getElementById('authLoginTab').setAttribute('aria-selected', !reg);
+            document.getElementById('authRegisterTab').setAttribute('aria-selected', reg);
+
+            document.getElementById('authTitle').textContent = reg ? 'নতুন অ্যাকাউন্ট খুলুন' : 'স্বাগতম, ফিরে এসেছেন';
+            document.getElementById('authSubtitle').textContent = reg ? meta.registerSub : meta.loginSub;
+
+            document.getElementById('authNameWrap').classList.toggle('hidden', !reg);
+            document.getElementById('authConfirmWrap').classList.toggle('hidden', !reg);
+            document.getElementById('pwStrengthWrap').classList.toggle('hidden', !reg);
+            document.getElementById('inviteCodeWrap').classList.toggle('hidden', !(reg && isClient));
+            document.getElementById('forgotPasswordBtn').classList.toggle('hidden', reg);
+            document.getElementById('resendVerificationBtn').classList.toggle('hidden', !(pendingVerify && !reg));
+
+            const info = document.getElementById('roleInfoBox');
+            info.classList.toggle('hidden', !reg);
+            info.innerHTML = meta.info;
+
+            document.getElementById('loginPassword').setAttribute('autocomplete', reg ? 'new-password' : 'current-password');
+            document.getElementById('authSubmitLabel').textContent = reg ? meta.label + ' হিসেবে রেজিস্টার করুন' : 'লগইন করুন';
+        }
+
+        function setAuthMode(mode) { authMode = mode; clearAllFieldErrors(); setAuthMessage(''); renderAuthUI(); }
+        function selectRole(role) { currentRole = role; clearAllFieldErrors(); setAuthMessage(''); renderAuthUI(); }
+
+        function showAuthView(view) {
+            document.getElementById('authMain').classList.toggle('hidden', view !== 'main');
+            document.getElementById('passwordResetRequestPanel').classList.toggle('hidden', view !== 'reset');
+            document.getElementById('passwordUpdatePanel').classList.toggle('hidden', view !== 'update');
+            if (view === 'reset') {
+                const typed = document.getElementById('loginUsername').value.trim();
+                if (typed) document.getElementById('resetEmail').value = typed;
+                renderMsg(document.getElementById('resetMessage'), '');
+                document.getElementById('resetEmail').focus();
+            }
+            if (view === 'update') { renderMsg(document.getElementById('updateMessage'), ''); document.getElementById('newPassword').focus(); }
+        }
+
+        function renderMsg(box, message, type) {
+            if (!box) return;
+            if (!message) { box.classList.add('hidden'); return; }
+            const t = type === true ? 'error' : (type || 'info');
+            box.className = 'rounded-xl border px-3.5 py-3 text-xs leading-relaxed flex gap-2.5 items-start msg-' + t;
+            box.querySelector('i').className = 'mt-0.5 fa-solid ' + ({ error: 'fa-circle-exclamation', success: 'fa-circle-check', info: 'fa-circle-info' }[t]);
+            box.querySelector('span').textContent = message;
+        }
+        function setAuthMessage(message, type) { renderMsg(document.getElementById('authMessage'), message, type); }
+
+        function fieldError(id, message) {
+            const input = document.getElementById(id);
+            const p = document.querySelector('[data-err-for="' + id + '"]');
+            if (input) input.classList.add('is-invalid');
+            if (p) { p.textContent = message; p.classList.remove('hidden'); }
+        }
+        function clearFieldError(id) {
+            const input = document.getElementById(id);
+            const p = document.querySelector('[data-err-for="' + id + '"]');
+            if (input) input.classList.remove('is-invalid');
+            if (p) p.classList.add('hidden');
+        }
+        function clearAllFieldErrors() {
+            ['authFullName', 'loginUsername', 'loginPassword', 'authConfirmPassword', 'inviteCode'].forEach(clearFieldError);
+        }
+
+        function updatePasswordStrength() {
+            const pw = document.getElementById('loginPassword').value;
+            let score = 0;
+            if (pw.length >= 8) score++;
+            if (/[A-Za-z\u0980-\u09FF]/.test(pw) && /\d/.test(pw)) score++;
+            if (pw.length >= 12) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+            if (!pw) score = 0;
+            const colors = ['#334155', '#f43f5e', '#f59e0b', '#22c55e', '#10b981'];
+            const labels = ['অক্ষর ও সংখ্যা মিলিয়ে ৮+ অক্ষরের পাসওয়ার্ড দিন।', 'দুর্বল পাসওয়ার্ড', 'মোটামুটি', 'ভালো পাসওয়ার্ড', 'শক্তিশালী পাসওয়ার্ড'];
+            document.querySelectorAll('#pwStrengthWrap .pw-seg').forEach((seg, i) => { seg.style.background = i < score ? colors[score] : colors[0]; });
+            document.getElementById('pwStrengthText').textContent = labels[score];
+        }
+
+        function friendlyAuthError(err) {
+            const m = (err && err.message) || '';
+            const l = m.toLowerCase();
+            if (l.includes('invalid login credentials')) return 'ইমেইল বা পাসওয়ার্ড সঠিক নয়।';
+            if (l.includes('email not confirmed')) { pendingVerify = true; return 'আপনার ইমেইল এখনো ভেরিফাই হয়নি। Inbox/Spam দেখে ভেরিফাই করুন, অথবা নিচের বাটনে আবার ইমেইল পাঠান।'; }
+            if (l.includes('already registered') || l.includes('already been registered')) return 'এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে। লগইন ট্যাবে যান, দরকার হলে পাসওয়ার্ড রিসেট করুন।';
+            if (l.includes('password should') || l.includes('weak password')) return 'পাসওয়ার্ড আরও শক্তিশালী করুন (কমপক্ষে ৮ অক্ষর, অক্ষর ও সংখ্যা মিলিয়ে)।';
+            if (l.includes('rate limit') || l.includes('seconds') || l.includes('too many')) return 'অল্প সময়ে অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ অপেক্ষা করে আবার চেষ্টা করুন।';
+            if (l.includes('failed to fetch') || l.includes('network')) return 'ইন্টারনেট সংযোগ যাচাই করে আবার চেষ্টা করুন।';
+            if (l.includes('invalid email') || l.includes('unable to validate email')) return 'ইমেইল ঠিকানাটি সঠিক নয়।';
+            if (l.includes('database error')) return currentRole === 'client'
+                ? 'রেজিস্ট্রেশন সম্পন্ন হয়নি। Invite Code সঠিক কি না পার্টনারের কাছ থেকে নিশ্চিত করে নিন।'
+                : 'রেজিস্ট্রেশন সম্পন্ন হয়নি। কিছুক্ষণ পর আবার চেষ্টা করুন।';
+            return m || 'অনুরোধ সম্পন্ন হয়নি। আবার চেষ্টা করুন।';
+        }
+
+        function setAuthBusy(busy, label) {
+            authBusy = busy;
+            const btn = document.getElementById('authSubmitButton');
+            const lbl = document.getElementById('authSubmitLabel');
+            btn.disabled = busy;
+            if (busy) { btn.setAttribute('aria-busy', 'true'); lbl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2" aria-hidden="true"></i>' + label; }
+            else { btn.removeAttribute('aria-busy'); renderAuthUI(); }
+        }
+
+        async function handleAuth(event) {
+            if (event) event.preventDefault();
+            if (authBusy) return;
+            clearAllFieldErrors();
+            const reg = authMode === 'register';
+            const isClient = currentRole === 'client';
+            const email = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const fullName = document.getElementById('authFullName').value.trim();
+            const confirm = document.getElementById('authConfirmPassword').value;
+            const code = document.getElementById('inviteCode').value.trim().replace(/\s+/g, '');
+
+            const problems = [];
+            if (reg && !fullName) problems.push(['authFullName', 'আপনার নাম লিখুন।']);
+            if (!email) problems.push(['loginUsername', 'ইমেইল লিখুন।']);
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) problems.push(['loginUsername', 'সঠিক ইমেইল ঠিকানা দিন।']);
+            if (!password) problems.push(['loginPassword', 'পাসওয়ার্ড লিখুন।']);
+            else if (password.length < 8) problems.push(['loginPassword', 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।']);
+            if (reg && password.length >= 8 && confirm !== password) problems.push(['authConfirmPassword', 'দুটি পাসওয়ার্ড মিলছে না।']);
+            if (reg && isClient && !code) problems.push(['inviteCode', 'ক্লায়েন্ট রেজিস্ট্রেশনের জন্য পার্টনারের Invite Code আবশ্যক।']);
+            if (problems.length) {
+                problems.forEach(([id, msg]) => fieldError(id, msg));
+                document.getElementById(problems[0][0]).focus();
+                setAuthMessage('উপরের চিহ্নিত ঘরগুলো ঠিক করে আবার চেষ্টা করুন।', 'error');
                 return;
             }
+            if (!supabaseClient) { setAuthMessage('সার্ভিস এখনো প্রস্তুত হয়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।', 'error'); return; }
 
-            localStorage.setItem(STORAGE_USER, currentRole);
+            setAuthBusy(true, 'যাচাই হচ্ছে…');
+            setAuthMessage(reg ? 'আপনার রেজিস্ট্রেশন অনুরোধ পাঠানো হচ্ছে…' : 'আপনার লগইন তথ্য যাচাই করা হচ্ছে…');
+            try {
+                if (reg) {
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email, password,
+                        options: {
+                            emailRedirectTo: window.location.origin + window.location.pathname,
+                            data: { role: currentRole, full_name: fullName, invite_code: isClient ? code : null }
+                        }
+                    });
+                    if (error) throw error;
+                    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+                        throw new Error('User already registered');
+                    }
+                    if (data.session) {
+                        currentSession = data.session;
+                        setAuthMessage('রেজিস্ট্রেশন সফল। ড্যাশবোর্ড প্রস্তুত হচ্ছে…', 'success');
+                        await enterAuthenticatedApp(currentRole);
+                    } else {
+                        pendingVerify = true;
+                        document.getElementById('authConfirmPassword').value = '';
+                        authMode = 'login';
+                        renderAuthUI();
+                        setAuthMessage('রেজিস্ট্রেশন অনুরোধ গ্রহণ হয়েছে। আপনার ইমেইলের Inbox/Spam দেখে ভেরিফাই করুন, তারপর এখানে লগইন করুন।', 'success');
+                    }
+                } else {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    currentSession = data.session;
+                    setAuthMessage('লগইন সফল। আপনার ড্যাশবোর্ড লোড হচ্ছে…', 'success');
+                    await enterAuthenticatedApp(currentRole);
+                }
+            } catch (err) {
+                const message = friendlyAuthError(err);
+                setAuthMessage(currentSession ? 'লগইন হয়েছে, কিন্তু ড্যাশবোর্ড প্রস্তুত হয়নি: ' + message : message, 'error');
+            } finally {
+                setAuthBusy(false);
+            }
+        }
+
+        async function resendVerificationEmail() {
+            const email = document.getElementById('loginUsername').value.trim();
+            if (!email) { fieldError('loginUsername', 'ভেরিফিকেশনের জন্য ইমেইল লিখুন।'); document.getElementById('loginUsername').focus(); return; }
+            try {
+                const { error } = await supabaseClient.auth.resend({ type: 'signup', email, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
+                if (error) throw error;
+                setAuthMessage('ভেরিফিকেশন ইমেইল আবার পাঠানো হয়েছে। Inbox, Spam ও Promotions দেখুন।', 'success');
+            } catch (err) { setAuthMessage(friendlyAuthError(err), 'error'); }
+        }
+
+        async function resetPassword(event) {
+            if (event) event.preventDefault();
+            const box = document.getElementById('resetMessage');
+            const email = document.getElementById('resetEmail').value.trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { renderMsg(box, 'সঠিক ইমেইল ঠিকানা লিখুন।', 'error'); document.getElementById('resetEmail').focus(); return; }
+            const btn = document.getElementById('sendResetEmailBtn');
+            btn.disabled = true; btn.textContent = 'পাঠানো হচ্ছে…';
+            try {
+                const redirectTo = window.location.origin + window.location.pathname + '?reset=1';
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo });
+                if (error) throw error;
+                renderMsg(box, 'অনুরোধ গ্রহণ হয়েছে। ইমেইলের Inbox/Spam দেখুন।', 'success');
+            } catch (err) { renderMsg(box, friendlyAuthError(err), 'error'); }
+            finally { btn.disabled = false; btn.textContent = 'আবার পাঠান'; }
+        }
+
+        async function updateNewPassword(event) {
+            if (event) event.preventDefault();
+            const box = document.getElementById('updateMessage');
+            const password = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmNewPassword').value;
+            if (password.length < 8) { renderMsg(box, 'নতুন পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।', 'error'); return; }
+            if (password !== confirm) { renderMsg(box, 'দুটি পাসওয়ার্ড মিলছে না।', 'error'); return; }
+            const btn = document.getElementById('updatePasswordBtn');
+            btn.disabled = true; btn.textContent = 'সেভ হচ্ছে…';
+            try {
+                const { error } = await supabaseClient.auth.updateUser({ password });
+                if (error) throw error;
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmNewPassword').value = '';
+                await supabaseClient.auth.signOut();
+                currentSession = null;
+                window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+                authMode = 'login';
+                showAuthView('main');
+                renderAuthUI();
+                setAuthMessage('পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে। নতুন পাসওয়ার্ড দিয়ে লগইন করুন।', 'success');
+            } catch (err) { renderMsg(box, friendlyAuthError(err), 'error'); }
+            finally { btn.disabled = false; btn.textContent = 'নতুন পাসওয়ার্ড সেভ করুন'; }
+        }
+
+        function prepareLocalStateForUser(userId) {
+            if (localStorage.getItem(STORAGE_USER) !== userId) {
+                localStorage.removeItem(STORAGE_JOURNAL);
+                localStorage.removeItem(STORAGE_ROUTINE);
+                localStorage.removeItem(STORAGE_TASKS);
+                localStorage.setItem(STORAGE_USER, userId);
+            }
+            initRoutine();
+            loadTasks();
+        }
+
+        async function enterAuthenticatedApp(expectedRole) {
+            const { data, error } = await supabaseClient.from('profiles').select('role').eq('id', currentSession.user.id).single();
+            if (error) throw error;
+            if (expectedRole && data.role !== expectedRole) {
+                await supabaseClient.auth.signOut();
+                currentSession = null;
+                currentRole = data.role;
+                authMode = 'login';
+                renderAuthUI();
+                setAuthMessage('এই অ্যাকাউন্টটি ' + ROLE_META[data.role].label + ' হিসেবে নিবন্ধিত। সঠিক ভূমিকা নির্বাচন করা হয়েছে—আবার "লগইন করুন" চাপুন।', 'error');
+                return false;
+            }
+            currentRole = data.role;
+            prepareLocalStateForUser(currentSession.user.id);
+            document.getElementById('loginScreen').classList.add('hidden');
             showDashboard();
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            await loadCloudReports();
+            await loadCloudRoutine();
+            if (currentRole === 'client') loadJournalDataForDate(document.getElementById('journalDate').value);
+            if (currentRole === 'partner') await loadPartnerPanel();
+            return true;
         }
 
-        function handleLogout() {
-            localStorage.removeItem(STORAGE_USER);
-            document.getElementById('mainDashboard').classList.add('hidden');
-            document.getElementById('loginScreen').classList.remove('hidden');
+        async function handleLogout() {
+            try { await supabaseClient.auth.signOut(); } catch (e) { /* ignore */ }
+            currentSession = null;
+            [STORAGE_JOURNAL, STORAGE_ROUTINE, STORAGE_TASKS, STORAGE_USER].forEach(k => localStorage.removeItem(k));
+            window.location.replace(window.location.origin + window.location.pathname);
         }
 
+        // ============ DASHBOARD NAVIGATION ============
         function showDashboard() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainDashboard').classList.remove('hidden');
-
-            const badge = document.getElementById('userRoleBadge');
-            const nav = document.getElementById('navTabsContainer');
-            nav.innerHTML = '';
-
-            if (currentRole === 'client') {
-                // BROTHER ROLE
-                badge.textContent = 'ক্লাইন্ট পোর্টাল (ভাই)';
-                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30';
-                
-                nav.innerHTML = `
-                    <button id="tabBtnJournal" onclick="switchTab('journal')" class="px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-brand-600 text-white">
-                        <i class="fa-solid fa-pen-to-square"></i> আজকের ডায়েরি ও ট্র্যাকার
-                    </button>
-                    <button id="tabBtnRoutine" onclick="switchTab('routine')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-calendar-days"></i> দৈনিক রুটিন এডিটর
-                    </button>
-                    <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-chart-line text-emerald-400"></i> সাপ্তাহিক ও মাসিক অ্যানালিটিক্স
-                    </button>
-                `;
-                switchTab('journal');
-
-            } else {
-                // SISTER ROLE
-                badge.textContent = 'পার্টনার ড্যাশবোর্ড (বোন)';
-                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-partner-500/20 text-partner-300 border border-partner-500/30';
-                
-                nav.innerHTML = `
-                    <button id="tabBtnSister" onclick="switchTab('sister')" class="px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-partner-600 text-white">
-                        <i class="fa-solid fa-user-shield"></i> ভাইয়ের রিপোর্ট ও মূল্যায়ন
-                    </button>
-                    <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-chart-line text-emerald-400"></i> ভাইয়ের অগ্রগতি ও অ্যানালিটিক্স
-                    </button>
-                `;
-                switchTab('sister');
-            }
-
-            updateGlobalStats();
-        }
-
-        function switchTab(tab) {
-            const secs = ['secBrotherJournal', 'secBrotherRoutine', 'secAnalytics', 'secSisterDashboard'];
-            secs.forEach(s => document.getElementById(s).classList.add('hidden'));
-
-            if (tab === 'journal') {
-                document.getElementById('secBrotherJournal').classList.remove('hidden');
-            } else if (tab === 'routine') {
-                document.getElementById('secBrotherRoutine').classList.remove('hidden');
-                renderRoutineTable();
-            } else if (tab === 'analytics') {
-                document.getElementById('secAnalytics').classList.remove('hidden');
-                renderAnalytics();
-            } else if (tab === 'sister') {
-                document.getElementById('secSisterDashboard').classList.remove('hidden');
-                populateSisterDateSelect();
-                renderSisterRoutineInspection();
-            }
-        }
-
-        // JOURNAL LOGIC
-        function getJournalLogs() {
-            try { return JSON.parse(localStorage.getItem(STORAGE_JOURNAL)) || {}; }
-            catch (e) { return {}; }
-        }
-
-        function saveJournalEntry(e) {
-            e.preventDefault();
-            const date = document.getElementById('journalDate').value;
-            if (!date) return;
-
-            const logs = getJournalLogs();
-            const existingSister = logs[date] ? logs[date].sisterEval : null;
-
-            logs[date] = {
-                date: date,
-                status: document.getElementById('journalStatus').value,
-                block1: document.getElementById('block1').value,
-                block2: document.getElementById('block2').value,
-                block3: document.getElementById('block3').value,
-                block4: document.getElementById('block4').value,
-                block5: document.getElementById('block5').value,
-                triggerPoint: document.getElementById('triggerPoint').value,
-                habitSun: document.getElementById('habitSun').checked,
-                habitExer: document.getElementById('habitExer').checked,
-                habitDiet: document.getElementById('habitDiet').checked,
-                sisterEval: existingSister
-            };
-
-            localStorage.setItem(STORAGE_JOURNAL, JSON.stringify(logs));
-            showToast('আজকের রিপোর্ট সেভ হয়েছে ও বোনে কাছে পৌঁছেছে!');
-            updateGlobalStats();
-        }
-
-        function loadJournalDataForDate(date) {
-            const logs = getJournalLogs();
-            const d = logs[date];
-            if (d) {
-                document.getElementById('journalStatus').value = d.status || 'clean';
-                document.getElementById('block1').value = d.block1 || '';
-                document.getElementById('block2').value = d.block2 || '';
-                document.getElementById('block3').value = d.block3 || '';
-                document.getElementById('block4').value = d.block4 || '';
-                document.getElementById('block5').value = d.block5 || '';
-                document.getElementById('triggerPoint').value = d.triggerPoint || '';
-                document.getElementById('habitSun').checked = !!d.habitSun;
-                document.getElementById('habitExer').checked = !!d.habitExer;
-                document.getElementById('habitDiet').checked = !!d.habitDiet;
-            } else {
-                document.getElementById('journalStatus').value = 'clean';
-                document.getElementById('block1').value = '';
-                document.getElementById('block2').value = '';
-                document.getElementById('block3').value = '';
-                document.getElementById('block4').value = '';
-                document.getElementById('block5').value = '';
-                document.getElementById('triggerPoint').value = '';
-                document.getElementById('habitSun').checked = false;
-                document.getElementById('habitExer').checked = false;
-                document.getElementById('habitDiet').checked = false;
-            }
-        }
-
-        // SISTER DASHBOARD LOGIC
-        function populateSisterDateSelect() {
-            const logs = getJournalLogs();
-            const sel = document.getElementById('sisterDateSelect');
-            sel.innerHTML = '';
-            const sorted = Object.keys(logs).sort().reverse();
-
-            if (sorted.length === 0) {
-                sel.innerHTML = '<option value="">ভাইয়ের কোনো এন্ট্রি জমা হয়নি</option>';
-                loadBrotherEntryForSister('');
-                return;
-            }
-
-            sorted.forEach(d => {
-                const item = logs[d];
-                const hasEval = item.sisterEval && item.sisterEval.notes;
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = `${d} - ${item.status === 'clean' ? '🟢 ক্লিন ডে' : '🔴 রিল্যাপস ডে'} ${hasEval ? ' (মূল্যায়িত ✓)' : ' (অপেক্ষমাণ ⏳)'}`;
-                sel.appendChild(opt);
-            });
-
-            if (sorted.length > 0) loadBrotherEntryForSister(sorted[0]);
-        }
-
-        function loadBrotherEntryForSister(date) {
-            const card = document.getElementById('brotherReportCard');
-            if (!date) {
-                card.innerHTML = '<p class="italic text-slate-500">কোনো ডাটা নেই।</p>';
-                return;
-            }
-
-            const logs = getJournalLogs();
-            const item = logs[date];
-            if (!item) return;
-
-            card.innerHTML = `
-                <div class="flex items-center justify-between border-b border-slate-700 pb-2">
-                    <span class="font-bold text-white text-xs">রিপোর্ট তারিখ: ${item.date}</span>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold ${item.status === 'clean' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                        ${item.status === 'clean' ? '🟢 Clean Day' : '🔴 Relapsed Day'}
-                    </span>
-                </div>
-                <div class="space-y-2 leading-relaxed">
-                    <p><b class="text-emerald-400">১. ৩টি ভালো কাজ:</b> ${item.block1 || '-'}</p>
-                    <p><b class="text-rose-400">২. কম ভালো অংশ (সততা):</b> ${item.block2 || '-'}</p>
-                    <p><b class="text-sky-400">৩. সিদ্ধান্ত:</b> ${item.block3 || '-'}</p>
-                    <p><b class="text-amber-400">৪. অর্জন/সাফল্য:</b> ${item.block4 || '-'}</p>
-                    <p><b class="text-indigo-400">৫. শিক্ষা ও প্রায়শ্চিত্ত:</b> ${item.block5 || '-'}</p>
-                    <p class="text-purple-300"><b>⚠️ চিহ্নিত ট্রিগার:</b> ${item.triggerPoint || 'নেই'}</p>
-                    <div class="pt-2 flex gap-4 text-[11px] text-slate-400">
-                        <span>☀️ রোদ/হাঁটা: <b>${item.habitSun ? 'হ্যাঁ' : 'না'}</b></span>
-                        <span>🏃‍♂️ ব্যায়াম: <b>${item.habitExer ? 'হ্যাঁ' : 'না'}</b></span>
-                        <span>🍌 ডায়েট: <b>${item.habitDiet ? 'হ্যাঁ' : 'না'}</b></span>
-                    </div>
-                </div>
-            `;
-
-            if (item.sisterEval) {
-                document.getElementById('sisterRating').value = item.sisterEval.rating || '5';
-                document.getElementById('sisterNotes').value = item.sisterEval.notes || '';
-            } else {
-                document.getElementById('sisterRating').value = '5';
-                document.getElementById('sisterNotes').value = '';
-            }
-        }
-
-        function saveSisterFeedback() {
-            const date = document.getElementById('sisterDateSelect').value;
-            if (!date) return;
-
-            const logs = getJournalLogs();
-            if (!logs[date]) return;
-
-            logs[date].sisterEval = {
-                rating: document.getElementById('sisterRating').value,
-                notes: document.getElementById('sisterNotes').value,
-                updatedAt: new Date().toISOString()
-            };
-
-            localStorage.setItem(STORAGE_JOURNAL, JSON.stringify(logs));
-            showToast('বোনের মূল্যায়ন সফলভাবে সংরক্ষিত হয়েছে!');
-            populateSisterDateSelect();
-        }
-
-        function renderSisterRoutineInspection() {
-            const list = getRoutine();
-            const body = document.getElementById('sisterRoutineInspectionBody');
-            body.innerHTML = '';
-            list.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-2 font-semibold text-brand-400">${item.time}</td>
-                    <td class="p-2 text-slate-200">${item.title}</td>
-                    <td class="p-2"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.type}</span></td>
-                `;
-                body.appendChild(tr);
-            });
-        }
-
-        // ROUTINE ENGINE
-        function initRoutine() {
-            const saved = localStorage.getItem(STORAGE_ROUTINE);
-            if (!saved) localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(defaultRoutine));
-        }
-
-        function getRoutine() {
-            try { return JSON.parse(localStorage.getItem(STORAGE_ROUTINE)) || defaultRoutine; }
-            catch (e) { return defaultRoutine; }
-        }
-
-        function renderRoutineTable() {
-            const list = getRoutine();
-            const body = document.getElementById('routineTableBody');
-            body.innerHTML = '';
-
-            list.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-xs text-brand-400">${item.time}</td>
-                    <td class="p-3 font-medium text-xs text-slate-200">${item.title}</td>
-                    <td class="p-3 text-xs"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">${item.type}</span></td>
-                    <td class="p-3 text-right">
-                        <button onclick="deleteRoutineItem(${index})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                `;
-                body.appendChild(tr);
-            });
-        }
-
-        function openAddRoutineModal() { document.getElementById('routineModal').classList.remove('hidden'); }
-        function closeAddRoutineModal() { document.getElementById('routineModal').classList.add('hidden'); }
-
-        function saveRoutineItem() {
-            const time = document.getElementById('rtTime').value.trim();
-            const title = document.getElementById('rtTitle').value.trim();
-            const type = document.getElementById('rtType').value;
-
-            if (!time || !title) { alert('সব ঘর পূরণ করুন'); return; }
-
-            const list = getRoutine();
-            list.push({ time, title, type });
-            localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
-            closeAddRoutineModal();
-            renderRoutineTable();
-            showToast('নতুন রুটিন আইটেম যুক্ত করা হয়েছে!');
-        }
-
-        function deleteRoutineItem(index) {
-            const list = getRoutine();
-            list.splice(index, 1);
-            localStorage.setItem(STORAGE_ROUTINE, JSON.stringify(list));
-            renderRoutineTable();
-        }
-
-        // LUSTMANAGER ANALYTICS ENGINE
-        function renderAnalytics() {
-            const logs = getJournalLogs();
-            const dates = Object.keys(logs).sort();
-
-            let totalClean = 0;
-            let currentStreak = 0;
-
-            dates.forEach(d => { if (logs[d].status === 'clean') totalClean++; });
-
-            const revDates = [...dates].reverse();
-            for (let d of revDates) {
-                if (logs[d].status === 'clean') currentStreak++;
-                else break;
-            }
-
-            document.getElementById('anaStreak').textContent = `${currentStreak} দিন`;
-            document.getElementById('anaClean').textContent = `${totalClean} দিন`;
-            document.getElementById('anaWeekly').textContent = dates.length ? `${Math.round((totalClean / Math.max(dates.length, 7)) * 100)}%` : '0%';
-            document.getElementById('anaMonthly').textContent = dates.length ? `${Math.round((totalClean / Math.max(dates.length, 30)) * 100)}%` : '0%';
-
-            const grid = document.getElementById('analyticsCalendarGrid');
-            grid.innerHTML = '';
-
-            const today = new Date();
-            for (let i = 27; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                const dStr = d.toISOString().split('T')[0];
-                const entry = logs[dStr];
-
-                const box = document.createElement('div');
-                box.className = "p-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all";
-
-                if (entry) {
-                    if (entry.status === 'clean') {
-                        box.className += " bg-emerald-500/20 border-emerald-500/40 text-emerald-300";
-                    } else {
-                        box.className += " bg-rose-500/20 border-rose-500/40 text-rose-300";
-                    }
-                } else {
-                    box.className += " bg-slate-800/40 border-slate-800 text-slate-600";
-                }
-
-                box.innerHTML = `
-                    <span class="text-[10px] opacity-70">${d.getDate()}</span>
-                    <i class="fa-solid ${entry ? (entry.status === 'clean' ? 'fa-check text-xs' : 'fa-xmark text-xs') : 'fa-minus text-[10px]'}"></i>
-                `;
-                grid.appendChild(box);
-            }
-        }
-
-        function updateGlobalStats() {
-            const logs = getJournalLogs();
-            const dates = Object.keys(logs).sort();
-
-            let cleanCount = 0;
-            let currentStreak = 0;
-
-            dates.forEach(d => { if (logs[d].status === 'clean') cleanCount++; });
-
-            const revDates = [...dates].reverse();
-            for (let d of revDates) {
-                if (logs[d].status === 'clean') currentStreak++;
-                else break;
-            }
-
-            document.getElementById('headClean').textContent = cleanCount;
-            document.getElementById('headStreak').textContent = `${currentStreak} দিন`;
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toastMessage');
-            document.getElementById('toastText').textContent = msg;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
-        }
-    </script>
-</body>
-</html>
