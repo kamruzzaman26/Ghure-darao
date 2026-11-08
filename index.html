@@ -137,12 +137,12 @@
               <div>
                 <p class="text-xs font-semibold text-slate-400 mb-2">আপনি কোন ভূমিকায়?</p>
                 <div class="grid grid-cols-2 gap-3" role="group" aria-label="ভূমিকা নির্বাচন">
-                  <button type="button" id="roleBtnClient" data-auth-role="client" aria-pressed="true" class="role-card">
+                  <button type="button" onclick="selectRole('client')" id="roleBtnClient" data-auth-role="client" aria-pressed="true" class="role-card">
                     <span class="role-icon"><i class="fa-solid fa-user"></i></span>
                     <span class="block font-bold text-sm">ক্লায়েন্ট</span>
                     <span class="block text-[11px] text-slate-400 mt-0.5 leading-snug">নিজের ডায়েরি ও রুটিন</span>
                   </button>
-                  <button type="button" id="roleBtnPartner" data-auth-role="partner" aria-pressed="false" class="role-card">
+                  <button type="button" onclick="selectRole('partner')" id="roleBtnPartner" data-auth-role="partner" aria-pressed="false" class="role-card">
                     <span class="role-icon"><i class="fa-solid fa-user-shield"></i></span>
                     <span class="block font-bold text-sm">পার্টনার</span>
                     <span class="block text-[11px] text-slate-400 mt-0.5 leading-snug">ক্লায়েন্টকে সহযোগিতা</span>
@@ -152,8 +152,8 @@
 
               <!-- Login / Register tabs -->
               <div class="grid grid-cols-2 rounded-xl bg-slate-800 p-1 text-sm" role="tablist">
-                <button type="button" id="authLoginTab" data-auth-mode="login" role="tab" aria-selected="true" class="auth-tab">লগইন</button>
-                <button type="button" id="authRegisterTab" data-auth-mode="register" role="tab" aria-selected="false" class="auth-tab">নতুন রেজিস্ট্রেশন</button>
+                <button type="button" onclick="setAuthMode('login')" id="authLoginTab" data-auth-mode="login" role="tab" aria-selected="true" class="auth-tab">লগইন</button>
+                <button type="button" onclick="setAuthMode('register')" id="authRegisterTab" data-auth-mode="register" role="tab" aria-selected="false" class="auth-tab">নতুন রেজিস্ট্রেশন</button>
               </div>
 
               <!-- Register info box -->
@@ -698,10 +698,6 @@
 
         function initAuthUI() {
             document.addEventListener('click', function(event) {
-                const roleButton = event.target.closest('[data-auth-role]');
-                if (roleButton) { event.preventDefault(); selectRole(roleButton.dataset.authRole); return; }
-                const modeButton = event.target.closest('[data-auth-mode]');
-                if (modeButton) { event.preventDefault(); setAuthMode(modeButton.dataset.authMode); return; }
                 const pwButton = event.target.closest('[data-toggle-pw]');
                 if (pwButton) {
                     event.preventDefault();
