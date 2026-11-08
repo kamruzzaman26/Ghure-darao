@@ -465,23 +465,46 @@
             setAuthMode(authMode);
         }
         async function handleAuth(){
-            const email=document.getElementById('loginUsername').value.trim(),password=document.getElementById('loginPassword').value;
+            const submitButton=document.querySelector('button[onclick="handleAuth()"]');
+            const submitLabel=document.getElementById('authSubmitLabel');
+            if(submitButton?.disabled)return;
+            const email=document.getElementById('loginUsername').value.trim();
+            const password=document.getElementById('loginPassword').value;
             if(!email||password.length<8){setAuthMessage('সঠিক ইমেইল ও কমপক্ষে ৮ অক্ষরের পাসওয়ার্ড দিন।',true);return;}
+            if(!supabaseClient){setAuthMessage('সার্ভিস এখনো প্রস্তুত হয়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।',true);return;}
+            const idleLabel=authMode==='login'?'লগইন করুন':(currentRole==='partner'?'Partner Registration':'Client Registration');
+            if(submitButton){
+                submitButton.disabled=true;
+                submitButton.setAttribute('aria-busy','true');
+                submitButton.classList.add('opacity-70','cursor-wait');
+            }
+            if(submitLabel)submitLabel.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2" aria-hidden="true"></i> যাচাই হচ্ছে…';
+            setAuthMessage(authMode==='login'?'আপনার লগইন তথ্য যাচাই করা হচ্ছে…':'আপনার রেজিস্ট্রেশন অনুরোধ পাঠানো হচ্ছে…');
             try{
               if(authMode==='register'){
                 const fullName=document.getElementById('authFullName').value.trim();
-                if(!fullName){setAuthMessage('আপনার নাম লিখুন।',true);return;}
+                if(!fullName)throw new Error('আপনার নাম লিখুন।');
                 const code=document.getElementById('inviteCode').value.trim();
-                if(currentRole==='client'&&!code){setAuthMessage('Client Registration-এর জন্য Partner Invite Code আবশ্যক।',true);return;}
+                if(currentRole==='client'&&!code)throw new Error('Client Registration-এর জন্য Partner Invite Code আবশ্যক।');
                 const {data,error}=await supabaseClient.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+window.location.pathname,data:{role:currentRole,full_name:fullName,invite_code:currentRole==='client'?code:null}}});
                 if(error)throw error;
-                if(data.session){currentSession=data.session;await enterAuthenticatedApp();}
-                else {document.getElementById('resendVerificationBtn').classList.remove('hidden');setAuthMessage('রেজিস্ট্রেশন অনুরোধ গ্রহণ হয়েছে। ইনবক্স/Spam দেখুন। ইমেইলের Verify link এই ওয়েবসাইটেই ফিরিয়ে আনবে।');}
+                if(data.session){currentSession=data.session;setAuthMessage('রেজিস্ট্রেশন সফল। ড্যাশবোর্ড প্রস্তুত হচ্ছে…');await enterAuthenticatedApp();}
+                else {document.getElementById('resendVerificationBtn').classList.remove('hidden');setAuthMessage('রেজিস্ট্রেশন অনুরোধ গ্রহণ হয়েছে। Inbox/Spam দেখুন; ইমেইল Verify করে আবার লগইন করুন।');}
               }else{
+                setAuthMessage('লগইন যাচাই হচ্ছে…');
                 const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
-                if(error)throw error;currentSession=data.session;await enterAuthenticatedApp();
+                if(error)throw error;
+                currentSession=data.session;
+                setAuthMessage('লগইন সফল। আপনার ড্যাশবোর্ড লোড হচ্ছে…');
+                await enterAuthenticatedApp();
               }
-            }catch(err){setAuthMessage(err.message||'অনুরোধ সম্পন্ন হয়নি।',true);}
+            }catch(err){
+                const message=err?.message||'অনুরোধ সম্পন্ন হয়নি। আবার চেষ্টা করুন।';
+                setAuthMessage(currentSession?'লগইন হয়েছে, কিন্তু ড্যাশবোর্ড প্রস্তুত হয়নি: '+message:message,true);
+            }finally{
+                if(submitButton){submitButton.disabled=false;submitButton.removeAttribute('aria-busy');submitButton.classList.remove('opacity-70','cursor-wait');}
+                if(submitLabel)submitLabel.textContent=idleLabel;
+            }
         }
         async function resendVerificationEmail(){
             const email=document.getElementById('loginUsername').value.trim();
